@@ -1,0 +1,479 @@
+{% extends 'base.html' %}
+{% load parametres_filters %}
+
+{% block title %}{% if object %}Modifier la Facture{% else %}Nouvelle Facture{% endif %} - DEVDRECO SOFT{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête de la page -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0 text-dark">
+                        <i class="fas fa-file-invoice-dollar me-2"></i>{% if object %}Modifier la facture{% else %}Nouvelle facture{% endif %}
+                    </h1>
+                    <p class="text-muted mb-0">Créez et gérez les factures des fournisseurs</p>
+            </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'factures:facture_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Retour
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" id="factureForm">
+        {% csrf_token %}
+        
+        <!-- Première ligne : Informations de base -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-info-circle me-2"></i>Informations de base
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="{{ form.numero.id_for_label }}" class="form-label">Numéro de facture *</label>
+                                    {{ form.numero }}
+                                    {% if form.numero.errors %}
+                                        <div class="text-danger small">{{ form.numero.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="{{ form.fournisseur.id_for_label }}" class="form-label">Fournisseur *</label>
+                                    {{ form.fournisseur }}
+                                    {% if form.fournisseur.errors %}
+                                        <div class="text-danger small">{{ form.fournisseur.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="{{ form.statut.id_for_label }}" class="form-label">Statut</label>
+                                    {{ form.statut }}
+                                    {% if form.statut.errors %}
+                                        <div class="text-danger small">{{ form.statut.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="{{ form.taux_tva.id_for_label }}" class="form-label">Taux TVA (%)</label>
+                                    {{ form.taux_tva }}
+                                    {% if form.taux_tva.errors %}
+                                        <div class="text-danger small">{{ form.taux_tva.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.objet.id_for_label }}" class="form-label">Objet *</label>
+                                    {{ form.objet }}
+                                    {% if form.objet.errors %}
+                                        <div class="text-danger small">{{ form.objet.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                                    {{ form.description }}
+                                    {% if form.description.errors %}
+                                        <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Deuxième ligne : Dates -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-calendar me-2"></i>Dates
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.date_emission.id_for_label }}" class="form-label">Date d'émission *</label>
+                                    {{ form.date_emission }}
+                                    {% if form.date_emission.errors %}
+                                        <div class="text-danger small">{{ form.date_emission.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="{{ form.date_echeance.id_for_label }}" class="form-label">Date d'échéance *</label>
+                                    {{ form.date_echeance }}
+                                    {% if form.date_echeance.errors %}
+                                        <div class="text-danger small">{{ form.date_echeance.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Date de réception</label>
+                                    <input type="text" class="form-control" value="{% if object.date_reception %}{{ object.date_reception|date:'d/m/Y' }} à {{ object.date_reception|time:'H:i' }}{% else %}Automatique{% endif %}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Troisième ligne : Lignes de facture -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-list me-2"></i>Lignes de facture
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {{ lignes_formset.management_form }}
+                        <div id="lignes-container">
+                            {% for form_ligne in lignes_formset %}
+                                <div class="ligne-facture-row mb-3 p-3 border rounded" data-form-index="{{ forloop.counter0 }}">
+                                    {% if form_ligne.DELETE %}
+                                        {{ form_ligne.DELETE }}
+                                    {% endif %}
+                                    {% if form_ligne.id %}
+                                        {{ form_ligne.id }}
+                                    {% endif %}
+                                    
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <label class="form-label">Description</label>
+                                            {{ form_ligne.description }}
+                                            {% if form_ligne.description.errors %}
+                                                <div class="text-danger small">{{ form_ligne.description.errors.0 }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label">Quantité</label>
+                                            {{ form_ligne.quantite }}
+                                            {% if form_ligne.quantite.errors %}
+                                                <div class="text-danger small">{{ form_ligne.quantite.errors.0 }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label">Unité</label>
+                                            {{ form_ligne.unite }}
+                                            {% if form_ligne.unite.errors %}
+                                                <div class="text-danger small">{{ form_ligne.unite.errors.0 }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label">Prix unitaire HT</label>
+                                            {{ form_ligne.prix_unitaire_ht }}
+                                            {% if form_ligne.prix_unitaire_ht.errors %}
+                                                <div class="text-danger small">{{ form_ligne.prix_unitaire_ht.errors.0 }}</div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label">Montant HT</label>
+                                            <input type="text" class="form-control montant-ht" readonly>
+                                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                                <button type="button" class="btn btn-sm btn-outline-danger remove-ligne" title="Supprimer cette ligne">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% empty %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-list fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">Aucune ligne de facture. Cliquez sur "Ajouter une ligne" pour commencer.</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="text-center">
+                            <button type="button" class="btn btn-outline-primary" id="add-ligne">
+                                <i class="fas fa-plus me-2"></i>Ajouter une ligne
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+
+        <!-- Quatrième ligne : Totaux -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-calculator me-2"></i>Totaux
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <h6 class="text-muted">Montant HT</h6>
+                                    <h4 class="text-primary" id="total-ht">0 GNF</h4>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <h6 class="text-muted">Montant TVA</h6>
+                                    <h4 class="text-info" id="total-tva">0 GNF</h4>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <h6 class="text-muted">Montant TTC</h6>
+                                    <h4 class="text-success" id="total-ttc">0 GNF</h4>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-center">
+                                    <h6 class="text-muted">Nombre de lignes</h6>
+                                    <h4 class="text-secondary" id="nombre-lignes">0</h4>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cinquième ligne : Conditions et notes -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-sticky-note me-2"></i>Conditions et notes
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.conditions_paiement.id_for_label }}" class="form-label">Conditions de paiement</label>
+                                    {{ form.conditions_paiement }}
+                                    {% if form.conditions_paiement.errors %}
+                                        <div class="text-danger small">{{ form.conditions_paiement.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                                    {{ form.notes }}
+                                    {% if form.notes.errors %}
+                                        <div class="text-danger small">{{ form.notes.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+    </div>
+</div>
+
+        <!-- Boutons d'action -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <a href="{% url 'factures:facture_list' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-2"></i>Annuler
+                                </a>
+                            </div>
+                            <div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>{% if object %}Modifier la facture{% else %}Créer la facture{% endif %}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialiser l'index basé sur le nombre de lignes existantes
+    let ligneIndex = document.querySelectorAll('.ligne-facture-row').length;
+    
+    // Fonction pour calculer les totaux
+    function calculerTotaux() {
+        let totalHT = 0;
+        let nombreLignes = 0;
+        
+        document.querySelectorAll('.ligne-facture-row').forEach(function(row) {
+            const deleteCheckbox = row.querySelector('input[name*="DELETE"]');
+            if (deleteCheckbox && deleteCheckbox.checked) {
+                return; // Ignorer les lignes supprimées
+            }
+            
+            const quantiteInput = row.querySelector('input[name*="quantite"]');
+            const prixInput = row.querySelector('input[name*="prix_unitaire_ht"]');
+            const montantDisplay = row.querySelector('.montant-ht');
+            
+            if (quantiteInput && prixInput && montantDisplay) {
+                const quantite = parseFloat(quantiteInput.value) || 0;
+                const prix = parseFloat(prixInput.value) || 0;
+                const montant = quantite * prix;
+                
+                montantDisplay.value = montant.toFixed(2) + ' GNF';
+                totalHT += montant;
+                nombreLignes++;
+            }
+        });
+        
+        // Calculer TVA et TTC
+        const tauxTVA = parseFloat(document.querySelector('#id_taux_tva').value) || 0;
+        const montantTVA = totalHT * (tauxTVA / 100);
+        const montantTTC = totalHT + montantTVA;
+        
+        // Afficher les totaux
+        document.getElementById('total-ht').textContent = totalHT.toFixed(2) + ' GNF';
+        document.getElementById('total-tva').textContent = montantTVA.toFixed(2) + ' GNF';
+        document.getElementById('total-ttc').textContent = montantTTC.toFixed(2) + ' GNF';
+        document.getElementById('nombre-lignes').textContent = nombreLignes;
+    }
+    
+    // Fonction pour ajouter une nouvelle ligne
+    function ajouterLigne() {
+        const container = document.getElementById('lignes-container');
+        const newRow = document.createElement('div');
+        newRow.className = 'ligne-facture-row mb-3 p-3 border rounded';
+        newRow.setAttribute('data-form-index', ligneIndex);
+        
+        newRow.innerHTML = `
+            <div class="row">
+                <div class="col-md-4">
+                    <label class="form-label">Description</label>
+                    <input type="text" name="lignes-${ligneIndex}-description" class="form-control" placeholder="Description de l'article ou service">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Quantité</label>
+                    <input type="number" name="lignes-${ligneIndex}-quantite" class="form-control" step="0.01" min="0.01" value="1.00">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Unité</label>
+                    <input type="text" name="lignes-${ligneIndex}-unite" class="form-control" placeholder="Unité" value="unité">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Prix unitaire HT</label>
+                    <input type="number" name="lignes-${ligneIndex}-prix_unitaire_ht" class="form-control" step="0.01" min="0" value="0.00">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Montant HT</label>
+                    <input type="text" class="form-control montant-ht" readonly>
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <button type="button" class="btn btn-sm btn-outline-danger remove-ligne" title="Supprimer cette ligne">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        container.appendChild(newRow);
+        
+        // Réorganiser tous les indices après ajout
+        mettreAJourIndices();
+        
+        // Ajouter les événements à la nouvelle ligne
+        ajouterEvenementsLigne(newRow);
+        calculerTotaux();
+    }
+    
+    // Fonction pour mettre à jour les indices des formulaires
+    function mettreAJourIndices() {
+        const rows = document.querySelectorAll('.ligne-facture-row');
+        rows.forEach(function(row, index) {
+            // Mettre à jour les noms des champs
+            const inputs = row.querySelectorAll('input, select, textarea');
+            inputs.forEach(function(input) {
+                if (input.name && input.name.includes('-')) {
+                    const parts = input.name.split('-');
+                    if (parts.length >= 3) {
+                        parts[1] = index; // Remplacer l'index par le nouvel index
+                        input.name = parts.join('-');
+                    }
+                }
+            });
+            
+            // Mettre à jour l'attribut data-form-index
+            row.setAttribute('data-form-index', index);
+        });
+        
+        // Mettre à jour le compteur total
+        const totalFormsInput = document.querySelector('#id_lignes-TOTAL_FORMS');
+        if (totalFormsInput) {
+            totalFormsInput.value = rows.length;
+        }
+    }
+    
+    // Fonction pour ajouter les événements à une ligne
+    function ajouterEvenementsLigne(row) {
+        const quantiteInput = row.querySelector('input[name*="quantite"]');
+        const prixInput = row.querySelector('input[name*="prix_unitaire_ht"]');
+        const removeBtn = row.querySelector('.remove-ligne');
+        
+        if (quantiteInput) {
+            quantiteInput.addEventListener('input', calculerTotaux);
+        }
+        if (prixInput) {
+            prixInput.addEventListener('input', calculerTotaux);
+        }
+        if (removeBtn) {
+            removeBtn.addEventListener('click', function() {
+                row.remove();
+                mettreAJourIndices(); // Réorganiser les indices
+                calculerTotaux();
+            });
+        }
+    }
+    
+    // Initialiser les indices au chargement
+    mettreAJourIndices();
+    
+    // Ajouter les événements aux lignes existantes
+    document.querySelectorAll('.ligne-facture-row').forEach(ajouterEvenementsLigne);
+    
+    // Événement pour le bouton d'ajout de ligne
+    document.getElementById('add-ligne').addEventListener('click', ajouterLigne);
+    
+    // Événement pour le taux de TVA
+    document.querySelector('#id_taux_tva').addEventListener('input', calculerTotaux);
+    
+    // Calcul initial
+    calculerTotaux();
+});
+</script>
+{% endblock %} 

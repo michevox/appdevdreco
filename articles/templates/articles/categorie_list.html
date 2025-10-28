@@ -1,0 +1,680 @@
+<!-- Template pour le popup de gestion des catégories -->
+<div class="categorie-popup-container">
+    <!-- En-tête du popup -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h6 class="mb-1">
+                <i class="fas fa-tags text-primary me-2"></i>
+                Gestion des catégories
+            </h6>
+            <small class="text-muted">Gérez les catégories d'articles</small>
+        </div>
+        <div class="btn-group" role="group">
+            <a href="{% url 'articles:export_categories_excel' %}" class="btn btn-outline-success btn-sm">
+                <i class="fas fa-download me-1"></i>Exporter
+            </a>
+            <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#importModal">
+                <i class="fas fa-upload me-1"></i>Importer
+            </button>
+        </div>
+    </div>
+
+    <!-- Formulaire d'ajout de catégorie (inline) -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <form method="post" id="categorieInlineForm" action="{% url 'articles:categorie_list' %}">
+                {% csrf_token %}
+                <div class="row g-2 align-items-end">
+                    <div class="col-9">
+                        <label class="form-label small">Libellé de la catégorie</label>
+                        {{ form.libelle }}
+                        {% if form.libelle.errors %}
+                        <div class="invalid-feedback d-block">{{ form.libelle.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-3 text-end">
+                        <button type="submit" id="categorieInlineSubmit" class="btn btn-success w-100">
+                            <i class="fas fa-save me-1"></i>Ajouter
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Zone de recherche et filtres -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input type="text" class="form-control" id="searchInput" 
+                       placeholder="Rechercher une catégorie..." 
+                       value="{{ search_query }}">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" id="statusFilter">
+                <option value="all" {% if status_filter == 'all' %}selected{% endif %}>Tous les statuts</option>
+                <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Actives seulement</option>
+                <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactives seulement</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" id="sortSelect">
+                <option value="libelle" {% if sort_by == 'libelle' %}selected{% endif %}>Trier par nom</option>
+                <option value="date_creation" {% if sort_by == 'date_creation' %}selected{% endif %}>Trier par date de création</option>
+                <option value="date_modification" {% if sort_by == 'date_modification' %}selected{% endif %}>Trier par date de modification</option>
+                <option value="actif" {% if sort_by == 'actif' %}selected{% endif %}>Trier par statut</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Boutons de tri -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="sortAscBtn" 
+                        title="Tri croissant">
+                    <i class="fas fa-sort-alpha-down"></i> Croissant
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="sortDescBtn" 
+                        title="Tri décroissant">
+                    <i class="fas fa-sort-alpha-up"></i> Décroissant
+                </button>
+                <button type="button" class="btn btn-outline-warning btn-sm" id="resetFiltersBtn" 
+                        title="Réinitialiser les filtres">
+                    <i class="fas fa-undo"></i> Réinitialiser
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Spinner global -->
+    <div id="categorieSpinner" class="text-center mb-2 d-none">
+        <div class="spinner-border text-primary" role="status" style="width:1.8rem;height:1.8rem">
+            <span class="visually-hidden">Chargement...</span>
+        </div>
+    </div>
+
+    <!-- Liste des catégories -->
+    <div class="categorie-list-container" style="max-height: 400px; overflow-y: auto;">
+        {% if categories %}
+            <div class="list-group list-group-flush">
+                {% for categorie in categories %}
+                <div class="list-group-item d-flex justify-content-between align-items-center py-2 px-3">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-tag text-primary me-2"></i>
+                        <div>
+                            <div class="fw-semibold">{{ categorie.libelle }}</div>
+                            <small class="text-muted">
+                                Créé le {{ categorie.date_creation|date:"d/m/Y" }}
+                            </small>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        {% if categorie.actif %}
+                            <span class="badge bg-success me-2">
+                                <i class="fas fa-check me-1"></i>Actif
+                            </span>
+                        {% else %}
+                            <span class="badge bg-secondary me-2">
+                                <i class="fas fa-times me-1"></i>Inactif
+                            </span>
+                        {% endif %}
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button" class="btn btn-outline-primary edit-categorie-btn" 
+                                    data-pk="{{ categorie.pk }}" title="Modifier">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-danger delete-categorie-btn" 
+                                    data-pk="{{ categorie.pk }}" title="Supprimer">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <!-- Pagination -->
+            {% if page_obj %}
+            <nav class="mt-2" aria-label="Pagination catégories">
+                <ul class="pagination pagination-sm justify-content-center mb-0">
+                    <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                        <a class="page-link" href="#" {% if page_obj.has_previous %}data-page="{{ page_obj.previous_page_number }}"{% endif %} aria-label="Précédent">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% for num in paginator.page_range %}
+                        <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                            <a class="page-link" href="#" data-page="{{ num }}">{{ num }}</a>
+                        </li>
+                    {% endfor %}
+                    <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                        <a class="page-link" href="#" {% if page_obj.has_next %}data-page="{{ page_obj.next_page_number }}"{% endif %} aria-label="Suivant">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-tags text-muted" style="font-size: 2rem;"></i>
+                <h6 class="mt-2 text-muted">Aucune catégorie</h6>
+                <p class="text-muted small">Commencez par créer votre première catégorie.</p>
+                <button type="button" class="btn btn-primary btn-sm" id="addFirstCategorieBtn">
+                    <i class="fas fa-plus me-1"></i>Créer la première catégorie
+                </button>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Statistiques rapides -->
+    <div class="mt-3 pt-3 border-top">
+        <div class="row text-center">
+            <div class="col-4">
+                <div class="fw-bold text-primary">{{ categories|length }}</div>
+                <small class="text-muted">Total</small>
+            </div>
+            <div class="col-4">
+                <div class="fw-bold text-success">{{ active_categories_count }}</div>
+                <small class="text-muted">Actives</small>
+            </div>
+            <div class="col-4">
+                <div class="fw-bold text-secondary">{{ inactive_categories_count }}</div>
+                <small class="text-muted">Inactives</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour les formulaires de catégorie -->
+<div class="modal fade" id="categorieFormModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="categorieFormModalTitle">Nouvelle catégorie</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="categorieFormModalBody">
+                <!-- Contenu du formulaire -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const formModal = new bootstrap.Modal(document.getElementById('categorieFormModal'));
+
+    function showSpinner() {
+        const sp = document.getElementById('categorieSpinner');
+        if (sp) sp.classList.remove('d-none');
+    }
+    function hideSpinner() {
+        const sp = document.getElementById('categorieSpinner');
+        if (sp) sp.classList.add('d-none');
+    }
+
+    function reloadCategorieList() {
+        showSpinner();
+        fetch(window.location.pathname, {
+            method: 'GET',
+            credentials: 'same-origin',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.text())
+        .then(html => {
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const newPopup = doc.querySelector('.categorie-popup-container');
+            document.querySelector('.categorie-popup-container').outerHTML = newPopup.outerHTML;
+            hideSpinner();
+            // Rebind handlers after DOM swap
+            initCategoriePopupBindings();
+        })
+        .catch(() => {
+            hideSpinner();
+            alert('Erreur lors du rechargement de la liste');
+        });
+    }
+
+    function initCategoriePopupBindings() {
+        // Soumission AJAX du formulaire inline
+        const inlineForm = document.getElementById('categorieInlineForm');
+        if (inlineForm && !inlineForm.dataset.bound) {
+            inlineForm.dataset.bound = 'true';
+            inlineForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const submitBtn = document.getElementById('categorieInlineSubmit');
+                const formData = new FormData(inlineForm);
+                showSpinner();
+                if (submitBtn) submitBtn.disabled = true;
+                fetch(inlineForm.action, {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin',
+                    headers: { 
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                })
+                .then(r => {
+                    const contentType = r.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        return r.json();
+                    } else {
+                        return r.text();
+                    }
+                })
+                .then(data => {
+                    if (typeof data === 'object' && data.success) {
+                        // Succès - recharger la liste via AJAX
+                        hideSpinner();
+                        // Vider le formulaire
+                        const form = document.getElementById('categorieInlineForm');
+                        if (form) form.reset();
+                        // Recharger la liste
+                        reloadCategorieList();
+                        // Afficher notification
+                        showToast('success', data.message);
+                    } else if (typeof data === 'string') {
+                        // Erreur de validation - remplacer le contenu
+                        const doc = new DOMParser().parseFromString(data, 'text/html');
+                        const newPopup = doc.querySelector('.categorie-popup-container');
+                        document.querySelector('.categorie-popup-container').outerHTML = newPopup.outerHTML;
+                        hideSpinner();
+                        // Rebind handlers after DOM swap
+                        initCategoriePopupBindings();
+                    }
+                })
+                .catch(() => {
+                    hideSpinner();
+                    alert('Erreur lors de l\'ajout de la catégorie');
+                })
+                .finally(() => {
+                    if (submitBtn) submitBtn.disabled = false;
+                });
+            });
+        }
+
+        // Boutons modifier catégorie
+        document.querySelectorAll('.edit-categorie-btn').forEach(btn => {
+            if (btn.dataset.bound) return;
+            btn.dataset.bound = 'true';
+            btn.addEventListener('click', function() {
+                const pk = this.dataset.pk;
+                showFormPopup(`{% url "articles:categorie_update_popup" pk=0 %}`.replace('0', pk), 'Modifier la catégorie');
+            });
+        });
+
+        // Boutons supprimer catégorie
+        document.querySelectorAll('.delete-categorie-btn').forEach(btn => {
+            if (btn.dataset.bound) return;
+            btn.dataset.bound = 'true';
+            btn.addEventListener('click', function() {
+                const pk = this.dataset.pk;
+                const categorieName = this.closest('.list-group-item').querySelector('.fw-semibold').textContent;
+                if (confirm(`Êtes-vous sûr de vouloir supprimer la catégorie "${categorieName}" ?`)) {
+                    showFormPopup(`{% url "articles:categorie_delete_popup" pk=0 %}`.replace('0', pk), 'Supprimer la catégorie');
+                }
+            });
+        });
+
+        // Pagination AJAX
+        document.querySelectorAll('.pagination a.page-link').forEach(a => {
+            if (a.dataset.bound) return;
+            a.dataset.bound = 'true';
+            a.addEventListener('click', function(e) {
+                e.preventDefault();
+                const page = this.dataset.page;
+                if (!page) return;
+                const url = new URL(window.location.href);
+                url.searchParams.set('page', page);
+                showSpinner();
+                fetch(url.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' }})
+                    .then(r => r.text())
+                    .then(html => {
+                        const doc = new DOMParser().parseFromString(html, 'text/html');
+                        const newContainer = doc.querySelector('.categorie-list-container');
+                        if (newContainer) {
+                            document.querySelector('.categorie-list-container').innerHTML = newContainer.innerHTML;
+                        }
+                        hideSpinner();
+                        // Rebind pagination & buttons inside new list
+                        initCategoriePopupBindings();
+                    })
+                    .catch(() => {
+                        hideSpinner();
+                        alert('Erreur lors du changement de page');
+                    });
+            });
+        });
+    }
+
+    // Initial bind
+    initCategoriePopupBindings();
+    
+    // Variables pour la recherche et le tri
+    let searchTimeout;
+    const currentSort = '{{ sort_by }}';
+    const currentOrder = '{{ sort_order }}';
+    
+    // Fonction pour mettre à jour l'URL et recharger
+    function updateFilters() {
+        const searchQuery = document.getElementById('searchInput').value.trim();
+        const statusFilter = document.getElementById('statusFilter').value;
+        const sortBy = document.getElementById('sortSelect').value;
+        
+        const params = new URLSearchParams();
+        if (searchQuery) params.set('search', searchQuery);
+        if (statusFilter !== 'all') params.set('status', statusFilter);
+        if (sortBy !== 'libelle') params.set('sort', sortBy);
+        if (window.currentSortOrder !== 'asc') params.set('order', window.currentSortOrder);
+        
+        const url = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+        
+        // Recharger le contenu via AJAX
+        fetch(url, {
+            method: 'GET',
+            credentials: 'same-origin',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            // Remplacer le contenu de la liste
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            const newListContainer = tempDiv.querySelector('.categorie-list-container');
+            const newStats = tempDiv.querySelector('.mt-3.pt-3.border-top');
+            
+            if (newListContainer) {
+                document.querySelector('.categorie-list-container').innerHTML = newListContainer.innerHTML;
+            }
+            if (newStats) {
+                document.querySelector('.mt-3.pt-3.border-top').innerHTML = newStats.innerHTML;
+            }
+            
+            // Réattacher les événements aux nouveaux boutons
+            attachEventListeners();
+        })
+        .catch(error => {
+            console.error('Erreur lors du rechargement:', error);
+        });
+    }
+    
+    // Fonction pour réattacher les événements
+    function attachEventListeners() {
+        // Boutons modifier catégorie
+        document.querySelectorAll('.edit-categorie-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const pk = this.dataset.pk;
+                showFormPopup(`{% url "articles:categorie_update_popup" pk=0 %}`.replace('0', pk), 'Modifier la catégorie');
+            });
+        });
+        
+        // Boutons supprimer catégorie
+        document.querySelectorAll('.delete-categorie-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const pk = this.dataset.pk;
+                const categorieName = this.closest('.list-group-item').querySelector('.fw-semibold').textContent;
+                
+                if (confirm(`Êtes-vous sûr de vouloir supprimer la catégorie "${categorieName}" ?`)) {
+                    showFormPopup(`{% url "articles:categorie_delete_popup" pk=0 %}`.replace('0', pk), 'Supprimer la catégorie');
+                }
+            });
+        });
+    
+    // Pagination AJAX
+    document.querySelectorAll('.pagination a.page-link').forEach(a => {
+        a.addEventListener('click', function(e) {
+            e.preventDefault();
+            const page = this.dataset.page;
+            if (!page) return;
+            const url = new URL(window.location.href);
+            url.searchParams.set('page', page);
+            fetch(url.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' }})
+                .then(r => r.text())
+                .then(html => {
+                    const doc = new DOMParser().parseFromString(html, 'text/html');
+                    const newContainer = doc.querySelector('.categorie-list-container');
+                    if (newContainer) {
+                        document.querySelector('.categorie-list-container').innerHTML = newContainer.innerHTML;
+                    }
+                })
+                .catch(() => alert('Erreur lors du changement de page'));
+        });
+    });
+    }
+    
+    // Recherche en temps réel
+    document.getElementById('searchInput').addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(updateFilters, 300); // Délai de 300ms
+    });
+    
+    // Filtre par statut
+    document.getElementById('statusFilter').addEventListener('change', updateFilters);
+    
+    // Tri par critère
+    document.getElementById('sortSelect').addEventListener('change', updateFilters);
+    
+    // Boutons de tri
+    document.getElementById('sortAscBtn').addEventListener('click', function() {
+        window.currentSortOrder = 'asc';
+        updateFilters();
+    });
+    
+    document.getElementById('sortDescBtn').addEventListener('click', function() {
+        window.currentSortOrder = 'desc';
+        updateFilters();
+    });
+    
+    // Réinitialiser les filtres
+    document.getElementById('resetFiltersBtn').addEventListener('click', function() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('statusFilter').value = 'all';
+        document.getElementById('sortSelect').value = 'libelle';
+        window.currentSortOrder = 'asc';
+        updateFilters();
+    });
+    
+    // Initialiser l'ordre de tri
+    window.currentSortOrder = currentOrder;
+    
+    // Fonction pour charger et afficher un formulaire
+    function showFormPopup(url, title) {
+        console.log('showFormPopup appelée avec URL:', url, 'et titre:', title);
+        fetch(url, {
+            method: 'GET',
+            credentials: 'same-origin',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+            }
+        })
+            .then(response => {
+                console.log('Réponse reçue:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Données reçues:', data);
+                if (data.html) {
+                    document.getElementById('categorieFormModalTitle').textContent = title;
+                    document.getElementById('categorieFormModalBody').innerHTML = data.html;
+                    formModal.show();
+                } else if (data.success) {
+                    showToast('success', data.message);
+                    // Recharger le contenu du popup parent
+                    if (window.parent && window.parent.refreshCategorieList) {
+                        window.parent.refreshCategorieList();
+                    } else {
+                        location.reload();
+                    }
+                } else {
+                    showToast('error', data.message || 'Erreur inconnue');
+                }
+            })
+            .catch(error => {
+                console.error('Erreur lors du fetch:', error);
+                showToast('error', 'Erreur lors du chargement');
+            });
+    }
+    
+    // Fonction pour afficher les notifications toast
+    function showToast(type, message) {
+        const toastContainer = document.getElementById('toast-container') || createToastContainer();
+        const toastId = 'toast-' + Date.now();
+        const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
+        const bgClass = type === 'success' ? 'bg-success' : 'bg-danger';
+        
+        const toastHtml = `
+            <div id="${toastId}" class="toast align-items-center text-white ${bgClass} border-0" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="fas ${iconClass} me-2"></i>
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        `;
+        
+        toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+        
+        const toastElement = document.getElementById(toastId);
+        const toast = new bootstrap.Toast(toastElement);
+        toast.show();
+        
+        // Supprimer l'élément après fermeture
+        toastElement.addEventListener('hidden.bs.toast', () => {
+            toastElement.remove();
+        });
+    }
+    
+    // Créer le conteneur de toast s'il n'existe pas
+    function createToastContainer() {
+        const container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'toast-container position-fixed top-0 end-0 p-3';
+        container.style.zIndex = '9999';
+        document.body.appendChild(container);
+        return container;
+    }
+    
+    // Le bouton "Nouvelle" a été retiré - le formulaire inline est maintenant utilisé directement
+    
+    // Bouton ajouter première catégorie - focus sur le champ de saisie
+    const addFirstBtn = document.getElementById('addFirstCategorieBtn');
+    if (addFirstBtn) {
+        addFirstBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Bouton première catégorie cliqué');
+            // Focus sur le champ de saisie du formulaire inline
+            const inputField = document.querySelector('#categorieInlineForm input[name="libelle"]');
+            if (inputField) {
+                inputField.focus();
+            }
+        });
+    }
+    
+    // Attacher les événements initiaux
+    attachEventListeners();
+    
+    // Gérer les soumissions de formulaires dans le modal
+    document.getElementById('categorieFormModal').addEventListener('submit', function(e) {
+        if (e.target.tagName === 'FORM') {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const url = e.target.action;
+            
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'X-Requested-With': 'XMLHttpRequest',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('success', data.message);
+                    // Ne pas fermer le popup, juste recharger la liste
+                    // Recharger le contenu du popup parent
+                    if (window.parent && window.parent.refreshCategorieList) {
+                        window.parent.refreshCategorieList();
+                    } else {
+                        // Recharger la liste des catégories dans le popup
+                        reloadCategorieList();
+                    }
+                } else {
+                    document.getElementById('categorieFormModalBody').innerHTML = data.html;
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                showToast('error', 'Erreur lors de la soumission');
+            });
+        }
+    });
+});
+</script>
+
+<!-- Modal d'import -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importModalLabel">
+                    <i class="fas fa-upload me-2"></i>Importer des catégories
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Instructions :</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>Téléchargez d'abord le modèle Excel</li>
+                        <li>Remplissez le fichier avec vos données</li>
+                        <li>Uploadez le fichier modifié</li>
+                    </ul>
+                </div>
+                
+                <div class="d-grid gap-2 mb-3">
+                    <a href="{% url 'articles:download_template_categories' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-download me-2"></i>Télécharger le modèle Excel
+                    </a>
+                </div>
+                
+                <form method="post" action="{% url 'articles:import_categories_excel' %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="excel_file" class="form-label">Fichier Excel (.xlsx ou .xls)</label>
+                        <input type="file" class="form-control" id="excel_file" name="excel_file" 
+                               accept=".xlsx,.xls" required>
+                        <div class="form-text">
+                            Sélectionnez un fichier Excel contenant vos catégories.
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-upload me-2"></i>Importer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+

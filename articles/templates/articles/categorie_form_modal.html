@@ -1,0 +1,97 @@
+{% load static %}
+<form method="post" id="categorieForm" action="{% if categorie %}{% url 'articles:categorie_update_popup' pk=categorie.pk %}{% else %}{% url 'articles:categorie_create_popup' %}{% endif %}">
+    {% csrf_token %}
+    
+    <div class="row">
+        <!-- Libellé de la catégorie -->
+        <div class="col-12">
+            <div class="mb-3">
+                <label for="{{ form.libelle.id_for_label }}" class="form-label">
+                    <i class="fas fa-tag me-1"></i>{{ form.libelle.label }}
+                </label>
+                {{ form.libelle }}
+                {% if form.libelle.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.libelle.errors.0 }}
+                    </div>
+                {% endif %}
+                {% if form.libelle.help_text %}
+                    <div class="form-text">{{ form.libelle.help_text }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Informations supplémentaires (si en mode édition) -->
+    {% if categorie %}
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h6 class="alert-heading">
+                    <i class="fas fa-info-circle me-2"></i>Informations de la catégorie
+                </h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <small class="text-muted">
+                            <strong>Date de création:</strong><br>
+                            {{ categorie.date_creation|date:"d/m/Y à H:i" }}
+                        </small>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted">
+                            <strong>Dernière modification:</strong><br>
+                            {{ categorie.date_modification|date:"d/m/Y à H:i" }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Boutons d'action -->
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>Annuler
+        </button>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-2"></i>
+            {% if categorie %}Modifier{% else %}Enregistrer{% endif %}
+        </button>
+    </div>
+</form>
+
+<script>
+// Validation en temps réel du formulaire
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('categorieForm');
+    const inputs = form.querySelectorAll('input, select, textarea');
+    
+    // Supprimer les classes d'erreur lors de la saisie
+    inputs.forEach(input => {
+        input.addEventListener('input', function() {
+            this.classList.remove('is-invalid');
+            const feedback = this.parentNode.querySelector('.invalid-feedback');
+            if (feedback) {
+                feedback.remove();
+            }
+        });
+    });
+    
+    // Validation du libellé en temps réel
+    const libelleInput = document.getElementById('id_libelle');
+    if (libelleInput) {
+        libelleInput.addEventListener('blur', function() {
+            const value = this.value.trim();
+            if (value.length < 2) {
+                this.classList.add('is-invalid');
+                const feedback = this.parentNode.querySelector('.invalid-feedback') || 
+                               this.parentNode.appendChild(document.createElement('div'));
+                feedback.className = 'invalid-feedback';
+                feedback.textContent = 'Le libellé doit contenir au moins 2 caractères.';
+            }
+        });
+    }
+});
+</script>
+

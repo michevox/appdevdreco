@@ -1,0 +1,101 @@
+{% extends 'parametres/base_parametres.html' %}
+
+{% block parametres_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header {% if utilisateur.actif %}bg-warning{% else %}bg-success{% endif %} text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-toggle-{% if utilisateur.actif %}off{% else %}on{% endif %} me-2"></i>
+                    {% if utilisateur.actif %}Désactiver{% else %}Activer{% endif %} l'utilisateur
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="mb-4">
+                    <i class="fas fa-user-{% if utilisateur.actif %}times{% else %}check{% endif %} fa-4x {% if utilisateur.actif %}text-warning{% else %}text-success{% endif %} mb-3"></i>
+                    <h4>
+                        {% if utilisateur.actif %}
+                            Désactiver l'utilisateur ?
+                        {% else %}
+                            Activer l'utilisateur ?
+                        {% endif %}
+                    </h4>
+                    <p class="text-muted">
+                        {% if utilisateur.actif %}
+                            L'utilisateur ne pourra plus se connecter à l'application.
+                        {% else %}
+                            L'utilisateur pourra à nouveau se connecter à l'application.
+                        {% endif %}
+                    </p>
+                </div>
+                
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-info-circle me-2"></i>Utilisateur concerné :</h6>
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <div class="avatar-sm me-3">
+                            <div class="avatar-title rounded-circle bg-light text-primary">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        </div>
+                        <div class="text-start">
+                            <h6 class="mb-0">{{ utilisateur.user.get_full_name|default:utilisateur.user.username }}</h6>
+                            <small class="text-muted">@{{ utilisateur.user.username }}</small>
+                        </div>
+                    </div>
+                    <ul class="list-unstyled mb-0">
+                        <li><strong>Email :</strong> {{ utilisateur.user.email }}</li>
+                        <li><strong>Rôle :</strong> {{ utilisateur.get_role_display }}</li>
+                        <li><strong>Poste :</strong> {{ utilisateur.poste|default:"Non renseigné" }}</li>
+                        <li><strong>Département :</strong> {{ utilisateur.departement|default:"Non renseigné" }}</li>
+                        <li><strong>Statut actuel :</strong> 
+                            {% if utilisateur.actif %}
+                                <span class="badge bg-success">Actif</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactif</span>
+                            {% endif %}
+                        </li>
+                    </ul>
+                </div>
+                
+                {% if utilisateur.actif %}
+                <div class="alert alert-warning">
+                    <h6><i class="fas fa-exclamation-triangle me-2"></i>Conséquences de la désactivation :</h6>
+                    <ul class="mb-0 text-start">
+                        <li>L'utilisateur ne pourra plus se connecter</li>
+                        <li>Les sessions actives seront terminées</li>
+                        <li>L'utilisateur reste dans la base de données</li>
+                        <li>Vous pourrez le réactiver plus tard</li>
+                    </ul>
+                </div>
+                {% else %}
+                <div class="alert alert-success">
+                    <h6><i class="fas fa-check-circle me-2"></i>Conséquences de l'activation :</h6>
+                    <ul class="mb-0 text-start">
+                        <li>L'utilisateur pourra se connecter normalement</li>
+                        <li>Tous ses droits seront restaurés</li>
+                        <li>Il pourra accéder à l'application</li>
+                    </ul>
+                </div>
+                {% endif %}
+                
+                <form method="post" class="d-inline">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="{% url 'parametres:utilisateur_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Annuler
+                        </a>
+                        <button type="submit" class="btn {% if utilisateur.actif %}btn-warning{% else %}btn-success{% endif %}">
+                            <i class="fas fa-{% if utilisateur.actif %}times{% else %}check{% endif %} me-2"></i>
+                            {% if utilisateur.actif %}
+                                Oui, désactiver
+                            {% else %}
+                                Oui, activer
+                            {% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

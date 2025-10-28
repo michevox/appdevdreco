@@ -1,0 +1,214 @@
+{% extends 'parametres/base_parametres.html' %}
+
+{% block parametres_content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-sliders-h me-2"></i>Paramètres généraux
+                </h5>
+                <p class="text-muted mb-0">Configurez les paramètres de base de votre application</p>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <!-- Paramètres monétaires -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary mb-3">
+                                <i class="fas fa-money-bill-wave me-2"></i>Paramètres monétaires
+                            </h6>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.symbole_monetaire.id_for_label }}" class="form-label">
+                                    {{ form.symbole_monetaire.label }}
+                                </label>
+                                {{ form.symbole_monetaire }}
+                                {% if form.symbole_monetaire.help_text %}
+                                    <div class="form-text">{{ form.symbole_monetaire.help_text }}</div>
+                                {% endif %}
+                                {% if form.symbole_monetaire.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.symbole_monetaire.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Paramètres de l'application -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary mb-3">
+                                <i class="fas fa-cog me-2"></i>Paramètres de l'application
+                            </h6>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.nom_application.id_for_label }}" class="form-label">
+                                    {{ form.nom_application.label }}
+                                </label>
+                                {{ form.nom_application }}
+                                {% if form.nom_application.help_text %}
+                                    <div class="form-text">{{ form.nom_application.help_text }}</div>
+                                {% endif %}
+                                {% if form.nom_application.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.nom_application.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.elements_par_page.id_for_label }}" class="form-label">
+                                    {{ form.elements_par_page.label }}
+                                </label>
+                                {{ form.elements_par_page }}
+                                {% if form.elements_par_page.help_text %}
+                                    <div class="form-text">{{ form.elements_par_page.help_text }}</div>
+                                {% endif %}
+                                {% if form.elements_par_page.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.elements_par_page.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.format_date.id_for_label }}" class="form-label">
+                                    {{ form.format_date.label }}
+                                </label>
+                                {{ form.format_date }}
+                                <div class="form-text">
+                                    Exemples : d/m/Y (17/08/2025), Y-m-d (2025-08-17), d-m-Y (17-08-2025)
+                                </div>
+                                {% if form.format_date.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.format_date.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Paramètres de notification -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h6 class="text-primary mb-3">
+                                <i class="fas fa-bell me-2"></i>Paramètres de notification
+                            </h6>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    {{ form.notifications_email }}
+                                    <label class="form-check-label" for="{{ form.notifications_email.id_for_label }}">
+                                        {{ form.notifications_email.label }}
+                                    </label>
+                                </div>
+                                {% if form.notifications_email.help_text %}
+                                    <div class="form-text">{{ form.notifications_email.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    {{ form.notifications_sms }}
+                                    <label class="form-check-label" for="{{ form.notifications_sms.id_for_label }}">
+                                        {{ form.notifications_sms.label }}
+                                    </label>
+                                </div>
+                                {% if form.notifications_sms.help_text %}
+                                    <div class="form-text">{{ form.notifications_sms.help_text }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Boutons d'action -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="{% url 'parametres:tableau_bord' %}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i>Retour
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Enregistrer les paramètres
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Informations et aide -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-info-circle me-2"></i>Informations
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h6><i class="fas fa-lightbulb me-2"></i>Conseils</h6>
+                    <ul class="mb-0">
+                        <li>Le symbole monétaire sera utilisé dans tous les documents</li>
+                        <li>Le format de date s'applique à l'affichage des dates</li>
+                        <li>Les éléments par page affectent la pagination</li>
+                        <li>Les notifications peuvent être activées/désactivées</li>
+                    </ul>
+                </div>
+                
+                <div class="alert alert-warning">
+                    <h6><i class="fas fa-exclamation-triangle me-2"></i>Attention</h6>
+                    <p class="mb-0">
+                        La modification de ces paramètres peut affecter l'affichage de l'application.
+                        Assurez-vous de tester après modification.
+                    </p>
+                </div>
+                
+                <div class="mt-3">
+                    <h6>Paramètres actuels :</h6>
+                    <ul class="list-unstyled">
+                        <li><strong>Symbole monétaire :</strong> {{ parametres.symbole_monetaire }}</li>
+                        <li><strong>Nom application :</strong> {{ parametres.nom_application }}</li>
+                        <li><strong>Éléments par page :</strong> {{ parametres.elements_par_page }}</li>
+                        <li><strong>Format date :</strong> {{ parametres.format_date }}</li>
+                        <li><strong>Notifications email :</strong> 
+                            {% if parametres.notifications_email %}
+                                <span class="badge bg-success">Activées</span>
+                            {% else %}
+                                <span class="badge bg-danger">Désactivées</span>
+                            {% endif %}
+                        </li>
+                        <li><strong>Notifications SMS :</strong> 
+                            {% if parametres.notifications_sms %}
+                                <span class="badge bg-success">Activées</span>
+                            {% else %}
+                                <span class="badge bg-danger">Désactivées</span>
+                            {% endif %}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

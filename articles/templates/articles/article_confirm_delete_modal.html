@@ -1,0 +1,70 @@
+{% load static %}
+<div class="text-center">
+    <div class="mb-4">
+        <i class="fas fa-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+    </div>
+    
+    <h5 class="mb-3">Confirmer la suppression</h5>
+    
+    <p class="text-muted mb-4">
+        Êtes-vous sûr de vouloir supprimer l'article 
+        <strong>"{{ article.designation }}"</strong> ?
+    </p>
+    
+    <div class="alert alert-warning">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Attention :</strong> Cette action est irréversible.
+    </div>
+    
+    <!-- Informations de l'article -->
+    <div class="card bg-light">
+        <div class="card-body">
+            <h6 class="card-title">
+                <i class="fas fa-box me-2"></i>Détails de l'article
+            </h6>
+            <div class="row">
+                <div class="col-md-6">
+                    <small class="text-muted">
+                        <strong>Désignation:</strong><br>
+                        {{ article.designation }}
+                    </small>
+                </div>
+                <div class="col-md-6">
+                    <small class="text-muted">
+                        <strong>Catégorie:</strong><br>
+                        {{ article.categorie.libelle }}
+                    </small>
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-md-6">
+                    <small class="text-muted">
+                        <strong>Date de création:</strong><br>
+                        {{ article.date_creation|date:"d/m/Y à H:i" }}
+                    </small>
+                </div>
+                <div class="col-md-6">
+                    <small class="text-muted">
+                        <strong>Dernière modification:</strong><br>
+                        {{ article.date_modification|date:"d/m/Y à H:i" }}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form method="post" id="deleteArticleForm" action="{% url 'articles:article_delete_popup' pk=article.pk %}">
+    {% csrf_token %}
+    
+    <!-- Boutons d'action -->
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>Annuler
+        </button>
+        <button type="submit" class="btn btn-danger">
+            <i class="fas fa-trash me-2"></i>Supprimer définitivement
+        </button>
+    </div>
+</form>
+

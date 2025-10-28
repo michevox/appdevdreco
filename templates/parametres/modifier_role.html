@@ -1,0 +1,393 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Modifier le Rôle - {{ user.get_full_name|default:user.username }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .role-card {
+        border: 2px solid #e9ecef;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+    }
+    
+    .role-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .role-card.selected {
+        border-color: #007bff;
+        background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+    }
+    
+    .role-card.selected::before {
+        content: '✓';
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        background: #007bff;
+        color: white;
+        width: 25px;
+        height: 25px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+    
+    .role-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        margin-bottom: 15px;
+    }
+    
+    .role-admin .role-icon {
+        background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+        color: white;
+    }
+    
+    .role-manager .role-icon {
+        background: linear-gradient(135deg, #4ecdc4, #44a08d);
+        color: white;
+    }
+    
+    .role-user .role-icon {
+        background: linear-gradient(135deg, #45b7d1, #96c93d);
+        color: white;
+    }
+    
+    .role-readonly .role-icon {
+        background: linear-gradient(135deg, #f093fb, #f5576c);
+        color: white;
+    }
+    
+    .role-none .role-icon {
+        background: linear-gradient(135deg, #c3cfe2, #c3cfe2);
+        color: #666;
+    }
+    
+    .user-info-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 30px;
+    }
+    
+    .user-avatar {
+        width: 80px;
+        height: 80px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        margin-right: 20px;
+    }
+    
+    .current-role-badge {
+        background: rgba(255,255,255,0.2);
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.9em;
+        font-weight: 500;
+    }
+    
+    .permissions-preview {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        margin-top: 15px;
+    }
+    
+    .permission-tag {
+        display: inline-block;
+        background: #e3f2fd;
+        color: #1976d2;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.8em;
+        margin: 2px;
+        border: 1px solid #bbdefb;
+    }
+    
+    .btn-save {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        padding: 12px 30px;
+        border-radius: 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    .role-description {
+        color: #666;
+        font-size: 0.9em;
+        line-height: 1.4;
+    }
+    
+    .role-permissions-count {
+        background: #007bff;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.8em;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-user-tag text-primary me-2"></i>
+                        Modifier le Rôle
+                    </h2>
+                    <p class="text-muted mb-0">Sélectionnez un rôle pour cet utilisateur</p>
+                </div>
+                <div>
+                    <a href="{% url 'parametres:gestion_permissions' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        Retour
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informations utilisateur -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="user-info-card">
+                <div class="d-flex align-items-center">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h4 class="mb-1">{{ user.get_full_name|default:user.username }}</h4>
+                        <p class="mb-2">{{ user.email }}</p>
+                        <div class="d-flex align-items-center">
+                            <span class="current-role-badge me-3">
+                                <i class="fas fa-user-tag me-1"></i>
+                                Rôle actuel : {{ profile.role.nom|default:"Aucun rôle" }}
+                            </span>
+                            {% if profile.actif %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle me-1"></i>
+                                    Actif
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-times-circle me-1"></i>
+                                    Inactif
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulaire de sélection de rôle -->
+    <form method="post" id="roleForm">
+        {% csrf_token %}
+        
+        <div class="row">
+            <div class="col-12">
+                <h5 class="mb-3">
+                    <i class="fas fa-list me-2"></i>
+                    Sélectionnez un rôle
+                </h5>
+            </div>
+        </div>
+
+        <!-- Option : Aucun rôle -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="role-card role-none {% if not profile.role %}selected{% endif %}" 
+                     onclick="selectRole('')">
+                    <div class="d-flex align-items-center">
+                        <div class="role-icon">
+                            <i class="fas fa-user-slash"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">Aucun rôle</h6>
+                            <p class="role-description mb-1">
+                                L'utilisateur n'aura que les permissions qui lui sont directement accordées.
+                            </p>
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Permissions personnalisées uniquement
+                            </small>
+                        </div>
+                        <div class="text-end">
+                            <input type="radio" name="role" value="" 
+                                   {% if not profile.role %}checked{% endif %} 
+                                   style="display: none;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rôles disponibles -->
+        {% for role in roles %}
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="role-card role-{{ role.nom|lower }} {% if profile.role.id == role.id %}selected{% endif %}" 
+                     onclick="selectRole('{{ role.id }}')">
+                    <div class="d-flex align-items-center">
+                        <div class="role-icon">
+                            {% if role.nom == 'Administrateur' %}
+                                <i class="fas fa-crown"></i>
+                            {% elif role.nom == 'Manager' %}
+                                <i class="fas fa-user-tie"></i>
+                            {% elif role.nom == 'Utilisateur Standard' %}
+                                <i class="fas fa-user"></i>
+                            {% elif role.nom == 'Lecture Seule' %}
+                                <i class="fas fa-eye"></i>
+                            {% else %}
+                                <i class="fas fa-user-tag"></i>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">
+                                {{ role.nom }}
+                                <span class="role-permissions-count">
+                                    {{ role.permissions.count }} permission{{ role.permissions.count|pluralize }}
+                                </span>
+                            </h6>
+                            <p class="role-description mb-2">{{ role.description }}</p>
+                            
+                            <!-- Aperçu des permissions -->
+                            <div class="permissions-preview">
+                                <small class="text-muted d-block mb-2">
+                                    <i class="fas fa-key me-1"></i>
+                                    Permissions incluses :
+                                </small>
+                                {% for permission in role.permissions.all|slice:":5" %}
+                                    <span class="permission-tag">{{ permission.nom }}</span>
+                                {% endfor %}
+                                {% if role.permissions.count > 5 %}
+                                    <span class="permission-tag">+{{ role.permissions.count|add:"-5" }} autres</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <input type="radio" name="role" value="{{ role.id }}" 
+                                   {% if profile.role.id == role.id %}checked{% endif %} 
+                                   style="display: none;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Informations sur les rôles -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <h6 class="alert-heading">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Information importante
+                    </h6>
+                    <p class="mb-0">
+                        Le rôle sélectionné déterminera les permissions de base de l'utilisateur. 
+                        Vous pourrez toujours ajouter ou retirer des permissions spécifiques 
+                        dans la section "Modifier les permissions".
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Boutons d'action -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="text-muted">
+                            <i class="fas fa-shield-alt me-1"></i>
+                            Les permissions du rôle s'ajoutent aux permissions personnalisées.
+                        </small>
+                    </div>
+                    <div>
+                        <a href="{% url 'parametres:gestion_permissions' %}" class="btn btn-outline-secondary me-2">
+                            <i class="fas fa-times me-1"></i>
+                            Annuler
+                        </a>
+                        <button type="submit" class="btn btn-save">
+                            <i class="fas fa-save me-1"></i>
+                            Sauvegarder le Rôle
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function selectRole(roleId) {
+    // Désélectionner tous les rôles
+    document.querySelectorAll('.role-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    // Décocher tous les radio buttons
+    document.querySelectorAll('input[name="role"]').forEach(radio => {
+        radio.checked = false;
+    });
+    
+    // Sélectionner le rôle cliqué
+    const selectedCard = event.currentTarget;
+    selectedCard.classList.add('selected');
+    
+    // Cocher le radio button correspondant
+    const radio = selectedCard.querySelector('input[name="role"]');
+    if (radio) {
+        radio.checked = true;
+    }
+}
+
+// Confirmation avant soumission
+document.getElementById('roleForm').addEventListener('submit', function(e) {
+    const selectedRole = document.querySelector('input[name="role"]:checked');
+    if (!selectedRole) {
+        e.preventDefault();
+        alert('Veuillez sélectionner un rôle ou choisir "Aucun rôle".');
+        return;
+    }
+    
+    const roleName = selectedRole.closest('.role-card').querySelector('h6').textContent.trim();
+    if (!confirm(`Êtes-vous sûr de vouloir assigner le rôle "${roleName}" à cet utilisateur ?`)) {
+        e.preventDefault();
+    }
+});
+</script>
+{% endblock %}

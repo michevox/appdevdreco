@@ -1,0 +1,525 @@
+{% extends 'base.html' %}
+{% load parametres_filters %}
+
+{% block title %}Nouveau Devis - DEVDRECO SOFT{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête de la page -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0 text-dark">
+                        <i class="fas fa-file-invoice me-2"></i>{% if object %}Modifier le devis{% else %}Nouveau devis{% endif %}
+                    </h1>
+                    <p class="text-muted mb-0">Créez et gérez vos devis</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'devis:devis_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Retour
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" id="devisForm">
+        {% csrf_token %}
+        
+        <!-- Données des articles existants (pour modification) -->
+        {% if existing_articles %}
+        <input type="hidden" id="existingArticlesData" value='[
+            {% for article in existing_articles %}
+            {
+                "description": "{{ article.description|escapejs }}",
+                "quantite": "{{ article.quantite|escapejs }}",
+                "unite": "{{ article.unite|escapejs }}",
+                "prix_unitaire_ht": "{{ article.prix_unitaire_ht|escapejs }}",
+                "montant_ht": "{{ article.montant_ht|escapejs }}"
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ]'>
+        {% endif %}
+        
+        <!-- Première ligne : Informations de base -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-info-circle me-2"></i>Informations du devis
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label for="{{ form.client.id_for_label }}" class="form-label">Client *</label>
+                                {{ form.client }}
+                                {% if form.client.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.client.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.statut.id_for_label }}" class="form-label">Statut *</label>
+                                {{ form.statut }}
+                                {% if form.statut.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.statut.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.numero.id_for_label }}" class="form-label">Numéro de devis *</label>
+                                {{ form.numero }}
+                                {% if form.numero.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.numero.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-4">
+                                <label for="{{ form.date_validite.id_for_label }}" class="form-label">Date de validité *</label>
+                                {{ form.date_validite }}
+                                {% if form.date_validite.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.date_validite.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.objet.id_for_label }}" class="form-label">Objet *</label>
+                                {{ form.objet }}
+                                {% if form.objet.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.objet.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.taux_tva.id_for_label }}" class="form-label">Taux TVA (%)</label>
+                                {{ form.taux_tva }}
+                                {% if form.taux_tva.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.taux_tva.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <label for="{{ form.description.id_for_label }}" class="form-label">Description détaillée</label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.description.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Deuxième ligne : Tableau des articles -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-list me-2"></i>Articles du devis
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="articlesTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 40%">Désignation</th>
+                                        <th style="width: 15%">Quantité</th>
+                                        <th style="width: 15%">Unités</th>
+                                        <th style="width: 15%">Prix unitaire HT</th>
+                                        <th style="width: 15%">Total HT</th>
+                                        <th style="width: 5%">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="articlesTableBody">
+                                    <!-- Les lignes d'articles seront ajoutées ici dynamiquement -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Troisième ligne : Totaux -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-calculator me-2"></i>Totaux
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label class="form-label">Montant total HT</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">{% get_symbole %}</span>
+                                    <input type="text" class="form-control" id="totalHT" readonly value="0.00">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Montant TVA (18%)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">{% get_symbole %}</span>
+                                    <input type="text" class="form-control" id="totalTVA" readonly value="0.00">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Montant TTC</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">{% get_symbole %}</span>
+                                    <input type="text" class="form-control" id="totalTTC" readonly value="0.00">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quatrième ligne : Conditions -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-file-contract me-2"></i>Conditions
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-12">
+                                <label for="{{ form.conditions_paiement.id_for_label }}" class="form-label">Conditions de paiement</label>
+                                {{ form.conditions_paiement }}
+                                {% if form.conditions_paiement.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.conditions_paiement.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <label for="{{ form.notes.id_for_label }}" class="form-label">Notes supplémentaires</label>
+                                {{ form.notes }}
+                                {% if form.notes.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.notes.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cinquième ligne : Boutons de gestion des articles -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-success" id="addArticleBtn">
+                                <i class="fas fa-plus me-2"></i>Ajouter un article
+                            </button>
+                            <button type="button" class="btn btn-warning" id="removeLastArticleBtn">
+                                <i class="fas fa-minus me-2"></i>Retirer le dernier article
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Boutons d'action -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex gap-2 justify-content-end">
+                            <button type="button" class="btn btn-secondary" id="cancelBtn">
+                                <i class="fas fa-times me-2"></i>Annuler
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>{% if object %}Mettre à jour{% else %}Enregistrer le devis{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Template pour une ligne d'article -->
+<template id="articleRowTemplate">
+    <tr class="article-row">
+        <td>
+            <input list="designationsList" type="text" class="form-control article-description" placeholder="Désignation de l'article" required autocomplete="off">
+        </td>
+        <td>
+            <input type="number" class="form-control article-quantite" step="0.01" min="0.01" placeholder="0.00" required>
+        </td>
+        <td>
+            <input type="text" class="form-control article-unite" placeholder="unité" required>
+        </td>
+        <td>
+            <input type="number" class="form-control article-prix" step="0.01" min="0" placeholder="0.00" required>
+        </td>
+        <td>
+            <input type="text" class="form-control article-total" readonly value="0.00">
+        </td>
+        <td>
+            <button type="button" class="btn btn-sm btn-outline-danger remove-article-btn" title="Supprimer cet article">
+                <i class="fas fa-trash"></i>
+            </button>
+        </td>
+    </tr>
+</template>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let articleCounter = 0;
+    let designationsCache = [];
+    const datalistId = 'designationsList';
+    // Insérer un datalist global une seule fois
+    if (!document.getElementById(datalistId)) {
+        const dl = document.createElement('datalist');
+        dl.id = datalistId;
+        document.body.appendChild(dl);
+    }
+    const designationsDatalist = document.getElementById(datalistId);
+
+    // Charger la liste des désignations depuis l'API
+    fetch('{% url "articles:article_designations_api" %}', {credentials: 'same-origin'})
+        .then(r => r.json())
+        .then(data => {
+            designationsCache = data.designations || [];
+            renderDesignations();
+        })
+        .catch(() => {});
+
+    function renderDesignations() {
+        if (!designationsDatalist) return;
+        designationsDatalist.innerHTML = '';
+        designationsCache.forEach(label => {
+            const opt = document.createElement('option');
+            opt.value = label;
+            designationsDatalist.appendChild(opt);
+        });
+    }
+    
+    // Fonction pour ajouter une ligne d'article
+    function addArticleRow(articleData = null) {
+        const template = document.getElementById('articleRowTemplate');
+        const clone = template.content.cloneNode(true);
+        const row = clone.querySelector('.article-row');
+        
+        // Ajouter des identifiants uniques
+        row.id = `article-${articleCounter}`;
+        const inputs = row.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.id = `${input.className.split('-')[1]}-${articleCounter}`;
+            input.name = `${input.className.split('-')[1]}-${articleCounter}`;
+        });
+        
+        // Remplir avec les données existantes si fournies
+        if (articleData) {
+            row.querySelector('.article-description').value = articleData.description || '';
+            row.querySelector('.article-quantite').value = articleData.quantite || '';
+            row.querySelector('.article-unite').value = articleData.unite || '';
+            row.querySelector('.article-prix').value = articleData.prix_unitaire_ht || '';
+            row.querySelector('.article-total').value = articleData.montant_ht || '0.00';
+        }
+        
+        // Ajouter les événements
+        addRowEventListeners(row);
+        
+        document.getElementById('articlesTableBody').appendChild(row);
+        articleCounter++;
+        
+        // Mettre à jour les totaux
+        updateTotals();
+    }
+    
+    // Fonction pour ajouter les événements à une ligne
+    function addRowEventListeners(row) {
+        const quantiteInput = row.querySelector('.article-quantite');
+        const prixInput = row.querySelector('.article-prix');
+        const removeBtn = row.querySelector('.remove-article-btn');
+        
+        // Calcul automatique du total
+        quantiteInput.addEventListener('input', calculateRowTotal);
+        prixInput.addEventListener('input', calculateRowTotal);
+        
+        // Supprimer la ligne
+        removeBtn.addEventListener('click', function() {
+            row.remove();
+            updateTotals();
+        });
+    }
+    
+    // Fonction pour calculer le total d'une ligne
+    function calculateRowTotal(event) {
+        const row = event.target.closest('.article-row');
+        const quantite = parseFloat(row.querySelector('.article-quantite').value) || 0;
+        const prix = parseFloat(row.querySelector('.article-prix').value) || 0;
+        const total = quantite * prix;
+        
+        row.querySelector('.article-total').value = total.toFixed(2);
+        updateTotals();
+    }
+    
+    // Fonction pour mettre à jour les totaux
+    function updateTotals() {
+        let totalHT = 0;
+        const rows = document.querySelectorAll('.article-row');
+        
+        rows.forEach(row => {
+            const total = parseFloat(row.querySelector('.article-total').value) || 0;
+            totalHT += total;
+        });
+        
+        const totalTVA = totalHT * 0.18; // 18% de TVA
+        const totalTTC = totalHT + totalTVA;
+        
+        document.getElementById('totalHT').value = totalHT.toFixed(2);
+        document.getElementById('totalTVA').value = totalTVA.toFixed(2);
+        document.getElementById('totalTTC').value = totalTTC.toFixed(2);
+    }
+    
+    // Événements des boutons
+    document.getElementById('addArticleBtn').addEventListener('click', addArticleRow);
+    
+    document.getElementById('removeLastArticleBtn').addEventListener('click', function() {
+        const rows = document.querySelectorAll('.article-row');
+        if (rows.length > 0) {
+            rows[rows.length - 1].remove();
+            updateTotals();
+        }
+    });
+    
+    // Charger les articles existants si on modifie un devis
+    const existingArticlesData = document.getElementById('existingArticlesData');
+    if (existingArticlesData && existingArticlesData.value) {
+        try {
+            const existingArticles = JSON.parse(existingArticlesData.value);
+            existingArticles.forEach(article => {
+                addArticleRow(article);
+            });
+        } catch (e) {
+            console.error('Erreur lors du chargement des articles existants:', e);
+            // En cas d'erreur, ajouter une ligne vide
+            addArticleRow();
+        }
+    } else {
+        // Ajouter une première ligne d'article au chargement pour un nouveau devis
+        addArticleRow();
+    }
+    
+    // Gestion de la soumission du formulaire
+    document.getElementById('devisForm').addEventListener('submit', function(e) {
+        console.log('Formulaire soumis !');
+        
+        // Validation des articles
+        const rows = document.querySelectorAll('.article-row');
+        console.log('Nombre de lignes d\'articles:', rows.length);
+        
+        if (rows.length === 0) {
+            alert('Veuillez ajouter au moins un article au devis.');
+            e.preventDefault();
+            return;
+        }
+        
+        // Créer les données des articles
+        const articles = [];
+        
+        rows.forEach((row, index) => {
+            const description = row.querySelector('.article-description').value.trim();
+            const quantite = row.querySelector('.article-quantite').value.trim();
+            const unite = row.querySelector('.article-unite').value.trim();
+            const prix = row.querySelector('.article-prix').value.trim();
+            
+            console.log(`Ligne ${index + 1}:`, { description, quantite, unite, prix });
+            
+            if (!description || !quantite || !unite || !prix) {
+                alert('Veuillez remplir tous les champs des articles.');
+                e.preventDefault();
+                return;
+            }
+            
+            // Validation et formatage des valeurs numériques
+            let quantiteVal = parseFloat(quantite.replace(',', '.'));
+            let prixVal = parseFloat(prix.replace(',', '.'));
+            
+            // Vérifier que les valeurs sont des nombres valides
+            if (isNaN(quantiteVal) || isNaN(prixVal)) {
+                alert(`Ligne ${index + 1}: Veuillez entrer des valeurs numériques valides pour la quantité et le prix.`);
+                e.preventDefault();
+                return;
+            }
+            
+            // Vérifier que les valeurs sont positives
+            if (quantiteVal <= 0 || prixVal < 0) {
+                alert(`Ligne ${index + 1}: La quantité doit être supérieure à 0 et le prix doit être positif.`);
+                e.preventDefault();
+                return;
+            }
+            
+            articles.push({
+                description: description,
+                quantite: quantiteVal.toString(),
+                unite: unite,
+                prix_unitaire_ht: prixVal.toString(),
+                montant_ht: (quantiteVal * prixVal).toFixed(2)
+            });
+        });
+        
+        if (articles.length === 0) {
+            e.preventDefault();
+            return;
+        }
+        
+        console.log('Articles validés:', articles);
+        
+        // Ajouter les articles au formulaire
+        const articlesInput = document.createElement('input');
+        articlesInput.type = 'hidden';
+        articlesInput.name = 'articles_data';
+        articlesInput.value = JSON.stringify(articles);
+        this.appendChild(articlesInput);
+        
+        console.log('Formulaire prêt à être soumis');
+        
+        // Laisser le formulaire se soumettre normalement
+    });
+
+    // Gestion de l'annulation
+    document.getElementById('cancelBtn').addEventListener('click', function() {
+        window.location.href = '/devis/';
+    });
+});
+</script>
+{% endblock %}

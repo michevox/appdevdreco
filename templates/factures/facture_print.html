@@ -1,0 +1,246 @@
+{% load parametres_filters %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Facture {{ facture.numero }} - DEVDRECO SOFT</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 20px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .title {
+            text-align: center;
+            font-size: 28px;
+            font-weight: bold;
+            margin: 0;
+        }
+        .info-section {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        .info-box {
+            flex: 1;
+            margin: 0 10px;
+        }
+        .info-box h3 {
+            background-color: #f8f9fa;
+            padding: 10px;
+            margin: 0 0 10px 0;
+            border-left: 4px solid #007bff;
+            font-size: 16px;
+        }
+        .info-box p {
+            margin: 5px 0;
+            line-height: 1.4;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        .table th,
+        .table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        .table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        .table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .totals {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 30px;
+        }
+        .totals-table {
+            width: 300px;
+            border-collapse: collapse;
+        }
+        .totals-table td {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+        }
+        .totals-table .total-row {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 50px;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
+        .signature-section {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 50px;
+        }
+        .signature-box {
+            text-align: center;
+            width: 200px;
+        }
+        .signature-line {
+            border-top: 1px solid #333;
+            margin-top: 50px;
+            padding-top: 5px;
+        }
+        @media print {
+            body {
+                margin: 0;
+                padding: 15px;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- En-tête -->
+    <div class="header">
+        <div class="logo">
+            DEVDRECO SOFT
+        </div>
+        <div class="title">
+            FACTURE
+        </div>
+        <div style="text-align: right;">
+            <strong>N° {{ facture.numero }}</strong><br>
+            <small>Date: {{ facture.date_emission|date:"d/m/Y" }}</small>
+        </div>
+    </div>
+
+    <!-- Informations -->
+    <div class="info-section">
+        <div class="info-box">
+            <h3>Informations de la facture</h3>
+            <p><strong>Objet:</strong> {{ facture.objet }}</p>
+            <p><strong>Date d'émission:</strong> {{ facture.date_emission|date:"d/m/Y" }}</p>
+            <p><strong>Date de réception:</strong> {{ facture.date_reception|date:"d/m/Y" }}</p>
+            <p><strong>Statut:</strong> {{ facture.get_statut_display }}</p>
+            {% if facture.description %}
+                <p><strong>Description:</strong> {{ facture.description }}</p>
+            {% endif %}
+        </div>
+        
+        <div class="info-box">
+            <h3>Fournisseur</h3>
+            {% if facture.fournisseur %}
+                <p><strong>{{ facture.fournisseur.nom }}</strong></p>
+                {% if facture.fournisseur.telephone %}
+                    <p><strong>Téléphone:</strong> {{ facture.fournisseur.telephone }}</p>
+                {% endif %}
+                {% if facture.fournisseur.email %}
+                    <p><strong>Email:</strong> {{ facture.fournisseur.email }}</p>
+                {% endif %}
+                {% if facture.fournisseur.adresse %}
+                    <p><strong>Adresse:</strong> {{ facture.fournisseur.adresse }}</p>
+                {% endif %}
+            {% else %}
+                <p><em>Aucun fournisseur associé</em></p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Lignes de facture -->
+    <h3>Articles facturés</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th>Quantité</th>
+                <th>Unité</th>
+                <th>Prix unitaire HT</th>
+                <th>Montant HT</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ligne in lignes %}
+            <tr>
+                <td>{{ ligne.description }}</td>
+                <td>{{ ligne.quantite }}</td>
+                <td>{{ ligne.unite }}</td>
+                <td>{{ ligne.prix_unitaire_ht|format_montant }}</td>
+                <td>{{ ligne.montant_ht|format_montant }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="text-align: center; color: #666;">Aucune ligne de facture</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Totaux -->
+    <div class="totals">
+        <table class="totals-table">
+            <tr>
+                <td><strong>Montant HT:</strong></td>
+                <td>{{ facture.montant_ht|format_montant }}</td>
+            </tr>
+            <tr>
+                <td><strong>TVA ({{ facture.taux_tva }}%):</strong></td>
+                <td>{{ facture.montant_tva|format_montant }}</td>
+            </tr>
+            <tr class="total-row">
+                <td><strong>Montant TTC:</strong></td>
+                <td><strong>{{ facture.montant_ttc|format_montant }}</strong></td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Conditions et notes -->
+    {% if facture.notes %}
+    <div class="footer">
+        <div style="margin-bottom: 20px;">
+            <h4>Notes:</h4>
+            <p>{{ facture.notes|linebreaks }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Signatures -->
+    <div class="signature-section">
+        <div class="signature-box">
+            <p><strong>Le fournisseur</strong></p>
+            <div class="signature-line">
+                <small>Nom, prénom et signature</small>
+            </div>
+        </div>
+        <div class="signature-box">
+            <p><strong>Le comptable</strong></p>
+            <div class="signature-line">
+                <small>Nom, prénom et signature</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script d'impression automatique -->
+    <script>
+        window.onload = function() {
+            window.print();
+        }
+    </script>
+</body>
+</html>

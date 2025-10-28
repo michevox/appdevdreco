@@ -1,0 +1,593 @@
+{% load parametres_filters %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Devis {{ devis.numero }} - {{ societe.nom }}</title>
+    <style>
+        /* Styles pour l'impression */
+        @media print {
+            body { margin: 0; }
+            .no-print { display: none; }
+        }
+        
+        /* Styles généraux */
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            font-size: 12pt;
+            line-height: 1.4;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            background: white;
+        }
+        
+        /* Variables CSS pour la cohérence */
+        :root {
+            --primary-color: #ff6b35; /* Orange principal */
+            --primary-dark: #e55a2b;
+            --secondary-color: #2c3e50; /* Bleu foncé */
+            --accent-color: #34495e; /* Gris foncé */
+            --light-gray: #f8f9fa;
+            --border-color: #ddd;
+            --text-color: #333;
+            --text-muted: #666;
+            --white: #ffffff;
+            --black: #000000;
+        }
+        
+        /* En-tête */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid var(--secondary-color);
+            padding-bottom: 20px;
+        }
+        
+        .logo-container {
+            margin-bottom: 20px;
+        }
+        
+        .logo {
+            max-width: 150px;
+            height: auto;
+        }
+        
+        .societe-nom {
+            font-size: 24pt;
+            font-weight: bold;
+            color: var(--secondary-color);
+            margin: 10px 0;
+        }
+        
+        .societe-info {
+            font-size: 11pt;
+            color: var(--text-muted);
+            line-height: 1.6;
+            word-wrap: break-word;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+        }
+        
+        /* Informations du devis et client */
+        .devis-info-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            gap: 40px;
+        }
+        
+        .client-info, .devis-details {
+            flex: 1;
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            background: var(--white);
+        }
+        
+        .section-title {
+            font-size: 14pt;
+            font-weight: bold;
+            color: var(--secondary-color);
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid var(--primary-color);
+        }
+        
+        .info-row {
+            margin-bottom: 8px;
+            font-size: 11pt;
+            word-wrap: break-word;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: var(--text-color);
+            min-width: 120px;
+            display: inline-block;
+            vertical-align: top;
+        }
+        
+        .info-value {
+            display: inline-block;
+            max-width: calc(100% - 130px);
+            vertical-align: top;
+        }
+        
+        .devis-details {
+            text-align: right;
+        }
+        
+        .devis-numero {
+            font-size: 18pt;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+        
+        .devis-statut {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 10pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+        }
+        
+        .statut-brouillon { background-color: var(--text-muted); color: var(--white); }
+        .statut-en_attente { background-color: #f39c12; color: var(--white); }
+        .statut-accepte { background-color: #27ae60; color: var(--white); }
+        .statut-refuse { background-color: #e74c3c; color: var(--white); }
+        
+        /* Titre principal du document */
+        .document-main-title {
+            text-align: center;
+            font-size: 20pt;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 30px 0;
+            padding: 15px;
+            background: var(--light-gray);
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+        }
+        
+        /* Tableau des articles */
+        .articles-section {
+            margin-bottom: 40px;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 10pt;
+        }
+        
+        .table th {
+            background-color: var(--accent-color);
+            color: var(--white);
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: bold;
+            border: 1px solid var(--secondary-color);
+            word-wrap: break-word;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+        }
+        
+        /* En-têtes de catégorie */
+        .category-header {
+            background-color: #ffb366 !important; /* Orange clair */
+            color: var(--black) !important;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .category-header td {
+            background-color: #ffb366 !important;
+            color: var(--black) !important;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        /* Lignes de total par catégorie */
+        .total-row {
+            background-color: var(--light-gray) !important;
+            font-weight: bold;
+        }
+        
+        .total-row td:first-child {
+            text-align: left;
+            font-weight: bold;
+        }
+        
+        .total-row td:last-child {
+            text-align: right;
+            font-weight: bold;
+        }
+        
+        .table td {
+            padding: 10px 8px;
+            border: 1px solid var(--border-color);
+            vertical-align: top;
+            word-wrap: break-word;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+            max-width: 0;
+        }
+        
+        .table tr:nth-child(even) {
+            background-color: var(--light-gray);
+        }
+        
+        .col-description { width: 40%; text-align: left; }
+        .col-quantite { width: 15%; text-align: center; }
+        .col-unite { width: 15%; text-align: center; }
+        .col-prix { width: 15%; text-align: right; }
+        .col-total { width: 15%; text-align: right; }
+        
+        /* Totaux et Conditions */
+        .totaux-section {
+            margin-bottom: 40px;
+            clear: both;
+        }
+        
+        .conditions-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        .condition-box {
+            background-color: var(--light-gray);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .condition-title {
+            font-size: 12pt;
+            font-weight: bold;
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--primary-color);
+        }
+        
+        .condition-content {
+            font-size: 10pt;
+            line-height: 1.5;
+            color: var(--text-color);
+            word-wrap: break-word;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+        }
+        
+        .condition-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .condition-list li {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .condition-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .totaux {
+            width: 100%;
+            border: 2px solid var(--secondary-color);
+            border-radius: 8px;
+            padding: 20px;
+            background-color: var(--light-gray);
+        }
+        
+        .total-ligne {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 11pt;
+        }
+        
+        .total-label {
+            font-weight: bold;
+            color: var(--text-color);
+        }
+        
+        .total-montant {
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+        
+        .total-ttc {
+            font-size: 16pt;
+            font-weight: bold;
+            color: var(--white);
+            background-color: var(--black);
+            border-top: 2px solid var(--secondary-color);
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 4px;
+        }
+        
+        .total-ttc .total-label {
+            color: var(--white);
+        }
+        
+        .total-ttc .total-montant {
+            color: var(--white);
+        }
+        
+        /* Pied de page */
+        .footer {
+            margin-top: 60px;
+            text-align: center;
+            font-size: 10pt;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border-color);
+            padding-top: 20px;
+        }
+        
+        .footer-generated {
+            font-style: italic;
+            color: var(--text-muted);
+        }
+        
+        /* Utilitaires */
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .text-bold { font-weight: bold; }
+        .text-muted { color: var(--text-muted); }
+        .mb-0 { margin-bottom: 0; }
+        .mt-20 { margin-top: 20px; }
+        .mb-20 { margin-bottom: 20px; }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .devis-info-container {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .conditions-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- En-tête -->
+    <div class="header">
+        {% if societe.en_tete_document %}
+            {{ societe.en_tete_document|safe }}
+        {% else %}
+            <div class="logo-container">
+                {% if societe.logo %}
+                    <img src="{{ societe.logo }}" alt="Logo {{ societe.nom }}" class="logo">
+                {% endif %}
+            </div>
+            <div class="societe-nom">{{ societe.nom }}</div>
+            <div class="societe-info">
+                {{ societe.adresse }}<br>
+                {{ societe.ville }}<br>
+                Tél: {{ societe.telephone }} | Email: {{ societe.email }}<br>
+                {% if societe.site_web %}{{ societe.site_web }}{% endif %}
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Informations du devis et client -->
+    <div class="devis-info-container">
+        <!-- Informations devis -->
+        <div class="devis-details">
+            <div class="info-row">
+                <span class="info-label">N° Devis :</span>
+                <span class="info-value">{{ devis.numero }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Date :</span>
+                <span class="info-value">{{ devis.date_creation|date:"d/m/Y" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Validité :</span>
+                <span class="info-value">{{ devis.date_validite|date:"d/m/Y" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Statut :</span>
+                <span class="info-value">
+                    {% if devis.statut == 'brouillon' %}Brouillon
+                    {% elif devis.statut == 'en_attente' %}En attente
+                    {% elif devis.statut == 'accepte' %}Accepté
+                    {% elif devis.statut == 'refuse' %}Refusé
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+
+        <!-- Informations client -->
+        <div class="client-info">
+            <div class="info-row">
+                <span class="info-label">Client :</span>
+                <span class="info-value">{{ devis.client.nom_complet }}</span>
+            </div>
+            {% if devis.client.telephone %}
+            <div class="info-row">
+                <span class="info-label">Téléphone :</span>
+                <span class="info-value">{{ devis.client.telephone }}</span>
+            </div>
+            {% endif %}
+            {% if devis.client.adresse %}
+            <div class="info-row">
+                <span class="info-label">Adresse :</span>
+                <span class="info-value">{{ devis.client.adresse }}</span>
+            </div>
+            {% endif %}
+            {% if devis.client.type_client %}
+            <div class="info-row">
+                <span class="info-label">Type de client :</span>
+                <span class="info-value">{{ devis.client.get_type_client_display }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Objet du devis -->
+    {% if devis.objet %}
+    <div class="info-row mb-20">
+        <span class="info-label text-bold">Objet :</span>
+        <span class="info-value">{{ devis.objet }}</span>
+    </div>
+    {% endif %}
+
+    <!-- Titre principal du document -->
+    <div class="document-main-title">
+        DEVIS QUANTITATIF ET ESTIMATIF
+    </div>
+
+    <!-- Articles du devis -->
+    <div class="articles-section">
+        {% if lignes %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th class="col-description">Désignation</th>
+                    <th class="col-quantite">Quantité</th>
+                    <th class="col-unite">Unité</th>
+                    <th class="col-prix">Prix unitaire HT (GNF)</th>
+                    <th class="col-total">Montant total HT (GNF)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% regroup lignes by categorie as lignes_par_categorie %}
+                {% for categorie in lignes_par_categorie %}
+                    <!-- En-tête de catégorie -->
+                    <tr class="category-header">
+                        <td colspan="5">{{ categorie.grouper|default:"Autres prestations" }}</td>
+                    </tr>
+                    
+                    <!-- Articles de la catégorie -->
+                    {% for ligne in categorie.list %}
+                    <tr>
+                        <td class="col-description">{{ ligne.description }}</td>
+                        <td class="col-quantite text-center">{{ ligne.quantite }}</td>
+                        <td class="col-unite text-center">{{ ligne.unite }}</td>
+                        <td class="col-prix text-right">{{ ligne.prix_unitaire_ht|format_montant }}</td>
+                        <td class="col-total text-right">{{ ligne.montant_ht|format_montant }}</td>
+                    </tr>
+                    {% endfor %}
+                    
+                    <!-- Total de la catégorie -->
+                    <tr class="total-row">
+                        <td class="text-bold">TOTAL</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td class="text-right text-bold">
+                            {% with total_categorie=0 %}
+                                {% for ligne in categorie.list %}
+                                    {% with total_categorie=total_categorie|add:ligne.montant_ht %}{% endwith %}
+                                {% endfor %}
+                                {{ total_categorie|format_montant }}
+                            {% endwith %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <!-- Si pas de catégories, afficher toutes les lignes -->
+                    {% for ligne in lignes %}
+                    <tr>
+                        <td class="col-description">{{ ligne.description }}</td>
+                        <td class="col-quantite text-center">{{ ligne.quantite }}</td>
+                        <td class="col-unite text-center">{{ ligne.unite }}</td>
+                        <td class="col-prix text-right">{{ ligne.prix_unitaire_ht|format_montant }}</td>
+                        <td class="col-total text-right">{{ ligne.montant_ht|format_montant }}</td>
+                    </tr>
+                    {% endfor %}
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted">Aucun article dans ce devis.</p>
+        {% endif %}
+    </div>
+
+    <!-- Totaux et Conditions -->
+    <div class="totaux-section">
+        <div class="conditions-grid">
+            <!-- Conditions de paiement à gauche -->
+            <div class="condition-box">
+                <div class="condition-title">Conditions de règlement</div>
+                <div class="condition-content">
+                    {% if devis.conditions_paiement %}
+                        {{ devis.conditions_paiement|linebreaks }}
+                    {% else %}
+                        <ul class="condition-list">
+                            <li>40% à la signature du devis</li>
+                            <li>30% en cours des travaux</li>
+                            <li>30% en fin des travaux</li>
+                        </ul>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Totaux à droite -->
+            <div class="totaux">
+                <div class="total-ligne">
+                    <span class="total-label">Sous-total HT :</span>
+                    <span class="total-montant">{{ devis.montant_ht|format_montant }}GNF</span>
+                </div>
+                <div class="total-ligne">
+                    <span class="total-label">TVA ({{ devis.taux_tva }}%) :</span>
+                    <span class="total-montant">{{ devis.montant_tva|format_montant }}GNF</span>
+                </div>
+                <div class="total-ligne total-ttc">
+                    <span class="total-label">Total TTC :</span>
+                    <span class="total-montant">{{ devis.montant_ttc|format_montant }}GNF</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pied de page -->
+    <div class="footer">
+        {% if societe.pied_page_document %}
+            {{ societe.pied_page_document|safe }}
+        {% else %}
+            <div class="footer-generated">
+                Devis généré le {% now "d/m/Y à H:i" %} - DEVDRECO
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Boutons d'impression (visibles uniquement à l'écran) -->
+    <div class="no-print" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
+        <button onclick="window.print()" style="padding: 10px 20px; background: var(--primary-color); color: white; border: none; border-radius: 5px; cursor: pointer; margin: 5px; font-weight: bold;">
+            🖨️ Imprimer
+        </button>
+        <button onclick="window.close()" style="padding: 10px 20px; background: var(--text-muted); color: white; border: none; border-radius: 5px; cursor: pointer; margin: 5px; font-weight: bold;">
+            ❌ Fermer
+        </button>
+    </div>
+</body>
+</html>

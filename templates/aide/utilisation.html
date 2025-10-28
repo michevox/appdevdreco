@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+{% load parametres_filters %}
+
+{% block title %}Guide d'Utilisation - {{ PARAMETRES_GLOBAUX.nom_application|default:"DEVDRECO SOFT" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête de la page -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0 text-dark">
+                        <i class="fas fa-book me-2"></i>Guide d'Utilisation
+                    </h1>
+                    <p class="text-muted mb-0">Apprenez à utiliser toutes les fonctionnalités de l'application</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'aide:index' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Retour à l'aide
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Menu de navigation -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">Navigation</h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="#introduction" class="list-group-item list-group-item-action">Introduction</a>
+                    <a href="#clients" class="list-group-item list-group-item-action">Gestion des clients</a>
+                    <a href="#devis" class="list-group-item list-group-item-action">Gestion des devis</a>
+                    <a href="#factures" class="list-group-item list-group-item-action">Gestion des factures</a>
+                    <a href="#commandes" class="list-group-item list-group-item-action">Bons de commande</a>
+                    <a href="#articles" class="list-group-item list-group-item-action">Gestion des articles</a>
+                    <a href="#fournisseurs" class="list-group-item list-group-item-action">Gestion des fournisseurs</a>
+                    <a href="#rapports" class="list-group-item list-group-item-action">Rapports</a>
+                    <a href="#parametres" class="list-group-item list-group-item-action">Paramètres</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contenu principal -->
+        <div class="col-md-9">
+            <!-- Introduction -->
+            <div class="card mb-4" id="introduction">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-play-circle me-2"></i>Introduction
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6>Bienvenue dans DEVDRECO SOFT</h6>
+                    <p>DEVDRECO SOFT est une application de gestion complète pour votre entreprise. Elle vous permet de gérer :</p>
+                    <ul>
+                        <li><strong>Les clients</strong> : Base de données clients avec coordonnées et historique</li>
+                        <li><strong>Les devis</strong> : Création et suivi des propositions commerciales</li>
+                        <li><strong>Les factures</strong> : Gestion des factures fournisseurs</li>
+                        <li><strong>Les bons de commande</strong> : Commandes d'achat et de vente</li>
+                        <li><strong>Les articles</strong> : Catalogue produits et services</li>
+                        <li><strong>Les fournisseurs</strong> : Base de données fournisseurs</li>
+                        <li><strong>Les rapports</strong> : Analyses et statistiques</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Gestion des clients -->
+            <div class="card mb-4" id="clients">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-users me-2"></i>Gestion des clients
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6>Comment gérer vos clients</h6>
+                    <ol>
+                        <li><strong>Ajouter un client</strong> : Cliquez sur "Nouveau Client" et remplissez le formulaire</li>
+                        <li><strong>Rechercher un client</strong> : Utilisez la barre de recherche ou les filtres</li>
+                        <li><strong>Modifier un client</strong> : Cliquez sur l'icône d'édition dans la liste</li>
+                        <li><strong>Voir les détails</strong> : Cliquez sur l'icône d'œil pour voir l'historique</li>
+                        <li><strong>Activer/Désactiver</strong> : Utilisez le bouton de statut pour gérer l'activité</li>
+                    </ol>
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Astuce :</strong> Les clients inactifs n'apparaissent pas dans les listes de sélection des devis.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gestion des devis -->
+            <div class="card mb-4" id="devis">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-file-invoice me-2"></i>Gestion des devis
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6>Comment créer et gérer vos devis</h6>
+                    <ol>
+                        <li><strong>Créer un devis</strong> : Cliquez sur "Nouveau Devis" et sélectionnez un client</li>
+                        <li><strong>Ajouter des lignes</strong> : Utilisez le bouton "Ajouter une ligne" pour les articles</li>
+                        <li><strong>Calculs automatiques</strong> : Les montants HT, TVA et TTC se calculent automatiquement</li>
+                        <li><strong>Envoyer le devis</strong> : Changez le statut pour "Envoyé"</li>
+                        <li><strong>Suivre les réponses</strong> : Marquez comme "Accepté" ou "Refusé"</li>
+                    </ol>
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>Bon à savoir :</strong> Un devis accepté peut être converti en bon de commande.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gestion des factures -->
+            <div class="card mb-4" id="factures">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-file-invoice-dollar me-2"></i>Gestion des factures
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6>Comment enregistrer les factures fournisseurs</h6>
+                    <ol>
+                        <li><strong>Enregistrer une facture</strong> : Cliquez sur "Nouvelle Facture"</li>
+                        <li><strong>Sélectionner le fournisseur</strong> : Choisissez dans la liste des fournisseurs actifs</li>
+                        <li><strong>Saisir les lignes</strong> : Ajoutez les articles/services facturés</li>
+                        <li><strong>Vérifier les montants</strong> : Les totaux se calculent automatiquement</li>
+                        <li><strong>Suivre le paiement</strong> : Changez le statut selon l'avancement</li>
+                    </ol>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Important :</strong> Les factures sont liées aux fournisseurs, pas aux clients.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bons de commande -->
+            <div class="card mb-4" id="commandes">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-shopping-cart me-2"></i>Bons de commande
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6>Comment créer des bons de commande</h6>
+                    <ol>
+                        <li><strong>Choisir le type</strong> : Achat fournisseur ou Vente client</li>
+                        <li><strong>Sélectionner le partenaire</strong> : Fournisseur ou client selon le type</li>
+                        <li><strong>Définir les articles</strong> : Ajoutez les produits/services à commander</li>
+                        <li><strong>Imprimer le bon</strong> : Utilisez le bouton d'impression pour le chargé d'achat</li>
+                        <li><strong>Suivre la livraison</strong> : Changez le statut selon l'avancement</li>
+                    </ol>
+                    <div class="alert alert-primary">
+                        <i class="fas fa-print me-2"></i>
+                        <strong>Impression :</strong> Les bons de commande peuvent être imprimés pour les achats.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gestion des articles -->
+            <div class="card mb-4" id="articles">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-boxes me-2"></i>Gestion des articles
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6>Comment gérer votre catalogue</h6>
+                    <ol>
+                        <li><strong>Ajouter un article</strong> : Définissez la description, prix et unité</li>
+                        <li><strong>Catégoriser</strong> : Organisez vos articles par catégories</li>
+                        <li><strong>Gérer les stocks</strong> : Suivez les quantités disponibles</li>
+                        <li><strong>Mettre à jour les prix</strong> : Ajustez les tarifs selon les besoins</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Gestion des fournisseurs -->
+            <div class="card mb-4" id="fournisseurs">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-truck me-2"></i>Gestion des fournisseurs
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6>Comment gérer vos fournisseurs</h6>
+                    <ol>
+                        <li><strong>Enregistrer un fournisseur</strong> : Ajoutez les coordonnées et informations</li>
+                        <li><strong>Évaluer les performances</strong> : Suivez la qualité et les délais</li>
+                        <li><strong>Gérer les contrats</strong> : Enregistrez les conditions commerciales</li>
+                        <li><strong>Suivre les commandes</strong> : Consultez l'historique des achats</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Rapports -->
+            <div class="card mb-4" id="rapports">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>Rapports et analyses
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6>Comment analyser vos données</h6>
+                    <ol>
+                        <li><strong>Rapports de vente</strong> : Analysez vos performances commerciales</li>
+                        <li><strong>Rapports d'achat</strong> : Suivez vos dépenses fournisseurs</li>
+                        <li><strong>Statistiques clients</strong> : Identifiez vos meilleurs clients</li>
+                        <li><strong>Évolutions temporelles</strong> : Suivez les tendances</li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Paramètres -->
+            <div class="card mb-4" id="parametres">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-cog me-2"></i>Paramètres
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6>Comment configurer l'application</h6>
+                    <ol>
+                        <li><strong>Informations société</strong> : Configurez vos coordonnées</li>
+                        <li><strong>Paramètres financiers</strong> : Définissez la devise et taux TVA</li>
+                        <li><strong>Préférences d'affichage</strong> : Personnalisez l'interface</li>
+                        <li><strong>Sauvegarde</strong> : Configurez les sauvegardes automatiques</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Navigation fluide vers les sections
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

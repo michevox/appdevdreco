@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - DEVDRECO SOFT{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-box me-2"></i>{{ title }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <!-- Informations générales -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-info mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>Informations générales
+                                </h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.fournisseur.id_for_label }}" class="form-label">
+                                    Fournisseur *
+                                </label>
+                                {{ form.fournisseur }}
+                                {% if form.fournisseur.errors %}
+                                    <div class="text-danger small">{{ form.fournisseur.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.article.id_for_label }}" class="form-label">
+                                    Article *
+                                </label>
+                                {{ form.article }}
+                                {% if form.article.errors %}
+                                    <div class="text-danger small">{{ form.article.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.reference_fournisseur.id_for_label }}" class="form-label">
+                                    Référence fournisseur
+                                </label>
+                                {{ form.reference_fournisseur }}
+                                {% if form.reference_fournisseur.errors %}
+                                    <div class="text-danger small">{{ form.reference_fournisseur.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check">
+                                    {{ form.actif }}
+                                    <label class="form-check-label" for="{{ form.actif.id_for_label }}">
+                                        Produit actif
+                                    </label>
+                                </div>
+                                {% if form.actif.errors %}
+                                    <div class="text-danger small">{{ form.actif.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Prix et conditions -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-info mb-3">
+                                    <i class="fas fa-dollar-sign me-2"></i>Prix et conditions
+                                </h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.prix_achat_ht.id_for_label }}" class="form-label">
+                                    Prix d'achat HT *
+                                </label>
+                                {{ form.prix_achat_ht }}
+                                {% if form.prix_achat_ht.errors %}
+                                    <div class="text-danger small">{{ form.prix_achat_ht.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.devise.id_for_label }}" class="form-label">
+                                    Devise
+                                </label>
+                                {{ form.devise }}
+                                {% if form.devise.errors %}
+                                    <div class="text-danger small">{{ form.devise.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.delai_livraison.id_for_label }}" class="form-label">
+                                    Délai de livraison (jours)
+                                </label>
+                                {{ form.delai_livraison }}
+                                {% if form.delai_livraison.errors %}
+                                    <div class="text-danger small">{{ form.delai_livraison.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.quantite_minimale.id_for_label }}" class="form-label">
+                                    Quantité minimale
+                                </label>
+                                {{ form.quantite_minimale }}
+                                {% if form.quantite_minimale.errors %}
+                                    <div class="text-danger small">{{ form.quantite_minimale.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.stock_disponible.id_for_label }}" class="form-label">
+                                    Stock disponible
+                                </label>
+                                {{ form.stock_disponible }}
+                                {% if form.stock_disponible.errors %}
+                                    <div class="text-danger small">{{ form.stock_disponible.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-info mb-3">
+                                    <i class="fas fa-sticky-note me-2"></i>Notes
+                                </h6>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                                {{ form.notes }}
+                                {% if form.notes.errors %}
+                                    <div class="text-danger small">{{ form.notes.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Boutons d'action -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <a href="{% if produit %}{% url 'fournisseurs:produit_fournisseur_list' %}{% else %}{% url 'fournisseurs:produit_fournisseur_list' %}{% endif %}" class="btn btn-outline-secondary">
+                                        <i class="fas fa-arrow-left me-2"></i>Annuler
+                                    </a>
+                                    <button type="submit" class="btn btn-info">
+                                        <i class="fas fa-save me-2"></i>{{ submit_text }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+

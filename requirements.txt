@@ -1,0 +1,46 @@
+# DEVDRECO SOFT - Dépendances Python
+
+# Framework principal
+Django==5.2.4
+
+# Base de données
+# SQLite (inclus avec Python)
+# PostgreSQL (pour la production)
+psycopg2-binary==2.9.9
+
+# Génération de PDF
+reportlab==4.2.5
+weasyprint==60.2
+
+# Import/Export Excel
+openpyxl==3.1.5
+
+# Envoi d'emails
+django-email-utils==0.1.0
+
+# Interface utilisateur
+django-crispy-forms==2.1
+crispy-bootstrap5==0.7
+
+# API REST (optionnel)
+djangorestframework==3.14.0
+
+# Sécurité
+django-cors-headers==4.3.1
+
+# Environnement
+python-decouple==3.8
+
+# Développement
+django-debug-toolbar==4.2.0
+
+# Tests
+pytest==7.4.3
+pytest-django==4.7.0
+
+# Linting et formatage
+flake8==6.1.0
+black==23.11.0
+
+# Variables d'environnement
+python-dotenv==1.0.0 

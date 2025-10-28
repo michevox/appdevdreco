@@ -1,0 +1,174 @@
+{% load static %}
+<form method="post" id="articleForm" action="{% if article %}{% url 'articles:article_update_popup' pk=article.pk %}{% else %}{% url 'articles:article_create_popup' %}{% endif %}">
+    {% csrf_token %}
+    
+    <div class="row">
+        <!-- Désignation de l'article -->
+        <div class="col-12">
+            <div class="mb-3">
+                <label for="{{ form.designation.id_for_label }}" class="form-label">
+                    <i class="fas fa-box me-1"></i>{{ form.designation.label }}
+                </label>
+                {{ form.designation }}
+                {% if form.designation.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.designation.errors.0 }}
+                    </div>
+                {% endif %}
+                {% if form.designation.help_text %}
+                    <div class="form-text">{{ form.designation.help_text }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Catégorie -->
+        <div class="col-12">
+            <div class="mb-3">
+                <label for="{{ form.categorie.id_for_label }}" class="form-label">
+                    <i class="fas fa-tags me-1"></i>{{ form.categorie.label }}
+                </label>
+                <div class="input-group">
+                    {{ form.categorie }}
+                    <button type="button" class="btn btn-outline-primary" id="addCategorieBtn" title="Ajouter une nouvelle catégorie">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                {% if form.categorie.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.categorie.errors.0 }}
+                    </div>
+                {% endif %}
+                {% if form.categorie.help_text %}
+                    <div class="form-text">{{ form.categorie.help_text }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Informations supplémentaires (si en mode édition) -->
+    {% if article %}
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h6 class="alert-heading">
+                    <i class="fas fa-info-circle me-2"></i>Informations de l'article
+                </h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <small class="text-muted">
+                            <strong>Date de création:</strong><br>
+                            {{ article.date_creation|date:"d/m/Y à H:i" }}
+                        </small>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted">
+                            <strong>Dernière modification:</strong><br>
+                            {{ article.date_modification|date:"d/m/Y à H:i" }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Boutons d'action -->
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>Annuler
+        </button>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-2"></i>
+            {% if article %}Modifier{% else %}Enregistrer{% endif %}
+        </button>
+    </div>
+</form>
+
+<script>
+// Validation en temps réel du formulaire
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('articleForm');
+    const inputs = form.querySelectorAll('input, select, textarea');
+    
+    // Supprimer les classes d'erreur lors de la saisie
+    inputs.forEach(input => {
+        input.addEventListener('input', function() {
+            this.classList.remove('is-invalid');
+            const feedback = this.parentNode.querySelector('.invalid-feedback');
+            if (feedback) {
+                feedback.remove();
+            }
+        });
+    });
+    
+    // Validation de la désignation en temps réel
+    const designationInput = document.getElementById('{{ form.designation.id_for_label }}');
+    if (designationInput) {
+        designationInput.addEventListener('blur', function() {
+            const value = this.value.trim();
+            if (value.length < 2) {
+                this.classList.add('is-invalid');
+                const feedback = this.parentNode.querySelector('.invalid-feedback') || 
+                               this.parentNode.appendChild(document.createElement('div'));
+                feedback.className = 'invalid-feedback';
+                feedback.textContent = 'La désignation doit contenir au moins 2 caractères.';
+            }
+        });
+    }
+    
+    // Bouton pour ajouter une nouvelle catégorie
+    const addCategorieBtn = document.getElementById('addCategorieBtn');
+    if (addCategorieBtn) {
+        addCategorieBtn.addEventListener('click', function() {
+            // Ouvrir le popup de création de catégorie
+            fetch('{% url "articles:categorie_create_popup" %}')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.html) {
+                        // Créer et afficher le modal pour la catégorie
+                        const modalHtml = `
+                            <div class="modal fade" id="categorieModal" tabindex="-1">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Nouvelle catégorie</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            ${data.html}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // Supprimer l'ancien modal s'il existe
+                        const existingModal = document.getElementById('categorieModal');
+                        if (existingModal) {
+                            existingModal.remove();
+                        }
+                        
+                        // Ajouter le nouveau modal
+                        document.body.insertAdjacentHTML('beforeend', modalHtml);
+                        
+                        // Afficher le modal
+                        const modal = new bootstrap.Modal(document.getElementById('categorieModal'));
+                        modal.show();
+                        
+                        // Gérer la fermeture du modal
+                        document.getElementById('categorieModal').addEventListener('hidden.bs.modal', function() {
+                            this.remove();
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    alert('Erreur lors du chargement du formulaire de catégorie');
+                });
+        });
+    }
+});
+</script>
+

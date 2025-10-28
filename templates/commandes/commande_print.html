@@ -1,0 +1,282 @@
+{% load parametres_filters %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bon de Commande {{ commande.numero }} - DEVDRECO SOFT</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 20px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .title {
+            text-align: center;
+            font-size: 28px;
+            font-weight: bold;
+            margin: 0;
+        }
+        .info-section {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        .info-box {
+            flex: 1;
+            margin: 0 10px;
+        }
+        .info-box h3 {
+            background-color: #f8f9fa;
+            padding: 10px;
+            margin: 0 0 10px 0;
+            border-left: 4px solid #007bff;
+            font-size: 16px;
+        }
+        .info-box p {
+            margin: 5px 0;
+            line-height: 1.4;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        .table th,
+        .table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        .table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        .table tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .totals {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 30px;
+        }
+        .totals-table {
+            width: 300px;
+            border-collapse: collapse;
+        }
+        .totals-table td {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+        }
+        .totals-table .total-row {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 50px;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
+        .signature-section {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 50px;
+        }
+        .signature-box {
+            text-align: center;
+            width: 200px;
+        }
+        .signature-line {
+            border-top: 1px solid #333;
+            margin-top: 50px;
+            padding-top: 5px;
+        }
+        @media print {
+            body {
+                margin: 0;
+                padding: 15px;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- En-tête -->
+    <div class="header">
+        <div class="logo">
+            DEVDRECO SOFT
+        </div>
+        <div class="title">
+            BON DE COMMANDE
+        </div>
+        <div style="text-align: right;">
+            <strong>N° {{ commande.numero }}</strong><br>
+            <small>Date: {{ commande.date_creation|date:"d/m/Y" }}</small>
+        </div>
+    </div>
+
+    <!-- Informations -->
+    <div class="info-section">
+        <div class="info-box">
+            <h3>Informations de la commande</h3>
+            <p><strong>Type:</strong> 
+                {% if commande.type_commande == 'achat' %}
+                    Achat fournisseur
+                {% else %}
+                    Vente client
+                {% endif %}
+            </p>
+            <p><strong>Objet:</strong> {{ commande.objet }}</p>
+            <p><strong>Date de livraison souhaitée:</strong> {{ commande.date_livraison_souhaitee|date:"d/m/Y" }}</p>
+            {% if commande.description %}
+                <p><strong>Description:</strong> {{ commande.description }}</p>
+            {% endif %}
+        </div>
+        
+        <div class="info-box">
+            <h3>
+                {% if commande.type_commande == 'achat' %}
+                    Fournisseur
+                {% else %}
+                    Client
+                {% endif %}
+            </h3>
+            {% if commande.type_commande == 'achat' and commande.fournisseur %}
+                <p><strong>{{ commande.fournisseur.nom }}</strong></p>
+                {% if commande.fournisseur.telephone %}
+                    <p><strong>Téléphone:</strong> {{ commande.fournisseur.telephone }}</p>
+                {% endif %}
+                {% if commande.fournisseur.email %}
+                    <p><strong>Email:</strong> {{ commande.fournisseur.email }}</p>
+                {% endif %}
+                {% if commande.fournisseur.adresse %}
+                    <p><strong>Adresse:</strong> {{ commande.fournisseur.adresse }}</p>
+                {% endif %}
+            {% elif commande.type_commande == 'vente' and commande.client %}
+                <p><strong>{{ commande.client.nom_complet }}</strong></p>
+                {% if commande.client.telephone %}
+                    <p><strong>Téléphone:</strong> {{ commande.client.telephone }}</p>
+                {% endif %}
+                {% if commande.client.email %}
+                    <p><strong>Email:</strong> {{ commande.client.email }}</p>
+                {% endif %}
+                {% if commande.client.adresse %}
+                    <p><strong>Adresse:</strong> {{ commande.client.adresse }}</p>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Lignes de commande -->
+    <h3>Articles commandés</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th>Quantité</th>
+                <th>Unité</th>
+                <th>Prix unitaire HT</th>
+                <th>Montant HT</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ligne in lignes %}
+            <tr>
+                <td>{{ ligne.description }}</td>
+                <td>{{ ligne.quantite }}</td>
+                <td>{{ ligne.unite }}</td>
+                <td>{{ ligne.prix_unitaire_ht|format_montant }}</td>
+                <td>{{ ligne.montant_ht|format_montant }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="text-align: center; color: #666;">Aucune ligne de commande</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Totaux -->
+    <div class="totals">
+        <table class="totals-table">
+            <tr>
+                <td><strong>Montant HT:</strong></td>
+                <td>{{ commande.montant_ht|format_montant }}</td>
+            </tr>
+            <tr>
+                <td><strong>TVA ({{ commande.taux_tva }}%):</strong></td>
+                <td>{{ commande.montant_tva|format_montant }}</td>
+            </tr>
+            <tr class="total-row">
+                <td><strong>Montant TTC:</strong></td>
+                <td><strong>{{ commande.montant_ttc|format_montant }}</strong></td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Conditions et notes -->
+    {% if commande.adresse_livraison or commande.conditions_livraison or commande.notes %}
+    <div class="footer">
+        {% if commande.adresse_livraison %}
+        <div style="margin-bottom: 20px;">
+            <h4>Adresse de livraison:</h4>
+            <p>{{ commande.adresse_livraison|linebreaks }}</p>
+        </div>
+        {% endif %}
+        
+        {% if commande.conditions_livraison %}
+        <div style="margin-bottom: 20px;">
+            <h4>Conditions de livraison:</h4>
+            <p>{{ commande.conditions_livraison|linebreaks }}</p>
+        </div>
+        {% endif %}
+        
+        {% if commande.notes %}
+        <div style="margin-bottom: 20px;">
+            <h4>Notes:</h4>
+            <p>{{ commande.notes|linebreaks }}</p>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Signatures -->
+    <div class="signature-section">
+        <div class="signature-box">
+            <p><strong>Le demandeur</strong></p>
+            <div class="signature-line">
+                <small>Nom, prénom et signature</small>
+            </div>
+        </div>
+        <div class="signature-box">
+            <p><strong>Le fournisseur</strong></p>
+            <div class="signature-line">
+                <small>Nom, prénom et signature</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script d'impression automatique -->
+    <script>
+        window.onload = function() {
+            window.print();
+        }
+    </script>
+</body>
+</html>

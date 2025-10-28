@@ -1,0 +1,290 @@
+{% extends 'base.html' %}
+{% load parametres_filters %}
+
+{% block title %}Détails du Devis - DEVDRECO SOFT{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête de la page -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0 text-dark">
+                        <i class="fas fa-file-invoice me-2"></i>Devis {{ devis.numero }}
+                    </h1>
+                    <p class="text-muted mb-0">{{ devis.objet }}</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'devis:devis_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Retour
+                    </a>
+                    <a href="{% url 'devis:devis_update' pk=devis.pk %}" class="btn btn-warning">
+                        <i class="fas fa-edit me-2"></i>Modifier
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Informations du devis -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Informations du devis
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Client :</strong> {{ devis.client.nom_complet }}</p>
+                            <p><strong>Statut :</strong> 
+                                {% if devis.statut == 'brouillon' %}
+                                    <span class="badge bg-secondary">Brouillon</span>
+                                {% elif devis.statut == 'en_attente' %}
+                                    <span class="badge bg-warning">En attente</span>
+                                {% elif devis.statut == 'accepte' %}
+                                    <span class="badge bg-success">Accepté</span>
+                                {% elif devis.statut == 'refuse' %}
+                                    <span class="badge bg-danger">Refusé</span>
+                                {% endif %}
+                            </p>
+                            <p><strong>Date de création :</strong> {{ devis.date_creation|date:"d/m/Y" }}</p>
+                            <p><strong>Date de validité :</strong> {{ devis.date_validite|date:"d/m/Y" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Objet :</strong> {{ devis.objet }}</p>
+                            {% if devis.description %}
+                                <p><strong>Description :</strong> {{ devis.description }}</p>
+                            {% endif %}
+                            <p><strong>Taux TVA :</strong> {{ devis.taux_tva }}%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Articles du devis -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>Articles du devis
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if lignes %}
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Désignation</th>
+                                        <th>Quantité</th>
+                                        <th>Unités</th>
+                                        <th>Prix unitaire HT</th>
+                                        <th>Total HT</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for ligne in lignes %}
+                                    <tr>
+                                        <td>{{ ligne.description }}</td>
+                                        <td>{{ ligne.quantite }}</td>
+                                        <td>{{ ligne.unite }}</td>
+                                        <td>{{ ligne.prix_unitaire_ht|format_montant }}</td>
+                                        <td>{{ ligne.montant_ht|format_montant }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">Aucun article dans ce devis.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Conditions -->
+            {% if devis.conditions_paiement %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-file-contract me-2"></i>Conditions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h6>Conditions de paiement</h6>
+                            <p>{{ devis.conditions_paiement }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Notes -->
+            {% if devis.notes %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-sticky-note me-2"></i>Notes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p>{{ devis.notes }}</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Résumé et actions -->
+        <div class="col-lg-4">
+            <!-- Résumé financier -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-calculator me-2"></i>Résumé financier
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Montant total HT</label>
+                        <div class="input-group">
+                            <span class="input-group-text">{% get_symbole %}</span>
+                            <input type="text" class="form-control" value="{{ devis.montant_ht|floatformat:2 }}" readonly>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Montant TVA ({{ devis.taux_tva }}%)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">{% get_symbole %}</span>
+                            <input type="text" class="form-control" value="{{ devis.montant_tva|floatformat:2 }}" readonly>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Montant TTC</label>
+                        <div class="input-group">
+                            <span class="input-group-text">{% get_symbole %}</span>
+                            <input type="text" class="form-control" value="{{ devis.montant_ttc|floatformat:2 }}" readonly>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-cogs me-2"></i>Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if devis.statut == 'en_attente' %}
+                            <button type="button" class="btn btn-success" data-action="accepter" data-devis-id="{{ devis.pk }}">
+                                <i class="fas fa-check me-2"></i>Accepter le devis
+                            </button>
+                            <button type="button" class="btn btn-danger" data-action="refuser" data-devis-id="{{ devis.pk }}">
+                                <i class="fas fa-times me-2"></i>Refuser le devis
+                            </button>
+                        {% endif %}
+                        <button type="button" class="btn btn-info" data-action="dupliquer" data-devis-id="{{ devis.pk }}">
+                            <i class="fas fa-copy me-2"></i>Dupliquer le devis
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Impression et PDF -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-print me-2"></i>Impression et Export
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'devis:devis_imprimer' pk=devis.pk %}" target="_blank" class="btn btn-primary">
+                            <i class="fas fa-file-pdf me-2"></i>Aperçu PDF
+                        </a>
+                        <a href="{% url 'devis:devis_telecharger' pk=devis.pk %}" class="btn btn-success">
+                            <i class="fas fa-download me-2"></i>Télécharger PDF
+                        </a>
+                        <button type="button" class="btn btn-outline-secondary" onclick="imprimerDirectement()">
+                            <i class="fas fa-print me-2"></i>Imprimer directement
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gestionnaire pour les actions des boutons
+    document.addEventListener('click', function(e) {
+        const button = e.target.closest('[data-action]');
+        if (!button) return;
+        
+        const action = button.getAttribute('data-action');
+        const devisId = button.getAttribute('data-devis-id');
+        
+        switch(action) {
+            case 'accepter':
+                if (confirm('Êtes-vous sûr de vouloir accepter ce devis ?')) {
+                    accepterDevis(devisId);
+                }
+                break;
+            case 'refuser':
+                if (confirm('Êtes-vous sûr de vouloir refuser ce devis ?')) {
+                    refuserDevis(devisId);
+                }
+                break;
+            case 'dupliquer':
+                if (confirm('Voulez-vous dupliquer ce devis ?')) {
+                    dupliquerDevis(devisId);
+                }
+                break;
+        }
+    });
+    
+    // Fonction pour accepter un devis
+    function accepterDevis(devisId) {
+        // Pour l'instant, rediriger vers la page de modification
+        // Vous pourrez implémenter la logique d'acceptation plus tard
+        window.location.href = `/devis/${devisId}/modifier/`;
+    }
+    
+    // Fonction pour refuser un devis
+    function refuserDevis(devisId) {
+        // Pour l'instant, rediriger vers la page de modification
+        // Vous pourrez implémenter la logique de refus plus tard
+        window.location.href = `/devis/${devisId}/modifier/`;
+    }
+    
+    // Fonction pour dupliquer un devis
+    function dupliquerDevis(devisId) {
+        // Pour l'instant, rediriger vers la page de création
+        // Vous pourrez implémenter la logique de duplication plus tard
+        window.location.href = '/devis/nouveau/';
+    }
+});
+
+// Fonction pour l'impression directe
+function imprimerDirectement() {
+    // Ouvrir la page d'impression dans une nouvelle fenêtre
+    const printWindow = window.open('{% url "devis:devis_imprimer" pk=devis.pk %}', '_blank');
+    
+    // Attendre que la page soit chargée puis lancer l'impression
+    printWindow.onload = function() {
+        setTimeout(function() {
+            printWindow.print();
+        }, 1000);
+    };
+}
+</script>
+{% endblock %}

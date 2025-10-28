@@ -1,0 +1,57 @@
+{% load static %}
+<div class="text-center">
+    <div class="mb-4">
+        <i class="fas fa-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+    </div>
+    
+    <h5 class="mb-3">Confirmer la suppression</h5>
+    
+    <p class="text-muted mb-4">
+        Êtes-vous sûr de vouloir supprimer la catégorie 
+        <strong>"{{ categorie.libelle }}"</strong> ?
+    </p>
+    
+    <div class="alert alert-warning">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Attention :</strong> Cette action est irréversible. 
+        Tous les articles associés à cette catégorie seront également supprimés.
+    </div>
+    
+    <!-- Informations de la catégorie -->
+    <div class="card bg-light">
+        <div class="card-body">
+            <h6 class="card-title">
+                <i class="fas fa-tag me-2"></i>Détails de la catégorie
+            </h6>
+            <div class="row">
+                <div class="col-md-6">
+                    <small class="text-muted">
+                        <strong>Libellé:</strong><br>
+                        {{ categorie.libelle }}
+                    </small>
+                </div>
+                <div class="col-md-6">
+                    <small class="text-muted">
+                        <strong>Date de création:</strong><br>
+                        {{ categorie.date_creation|date:"d/m/Y à H:i" }}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form method="post" id="deleteCategorieForm" action="{% url 'articles:categorie_delete_popup' pk=categorie.pk %}">
+    {% csrf_token %}
+    
+    <!-- Boutons d'action -->
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>Annuler
+        </button>
+        <button type="submit" class="btn btn-danger">
+            <i class="fas fa-trash me-2"></i>Supprimer définitivement
+        </button>
+    </div>
+</form>
+

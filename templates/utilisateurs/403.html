@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Accès refusé{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-lock fa-5x text-danger"></i>
+                    </div>
+                    
+                    <h2 class="text-danger mb-3">Accès refusé</h2>
+                    
+                    <p class="lead mb-4">
+                        {{ message|default:"Vous n'avez pas les permissions nécessaires pour accéder à cette page." }}
+                    </p>
+                    
+                    {% if permission_requise %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        <strong>Permission requise :</strong> {{ permission_requise }}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mt-4">
+                        <a href="{% url 'dashboard' %}" class="btn btn-primary mr-2">
+                            <i class="fas fa-home mr-1"></i>
+                            Retour au tableau de bord
+                        </a>
+                        
+                        <a href="{% url 'utilisateurs:mon_profil' %}" class="btn btn-info">
+                            <i class="fas fa-user mr-1"></i>
+                            Voir mon profil
+                        </a>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <small class="text-muted">
+                            Si vous pensez que c'est une erreur, contactez votre administrateur système.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

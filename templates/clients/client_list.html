@@ -1,0 +1,632 @@
+{% extends 'base.html' %}
+{% load parametres_filters %}
+
+{% block title %}Gestion des Clients - DEVDRECO SOFT{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête de la page -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0 text-dark">
+                        <i class="fas fa-users me-2"></i>Gestion des Clients
+                    </h1>
+                    <p class="text-muted mb-0">Gérez votre base de données clients</p>
+                </div>
+                <div class="d-flex gap-2">
+                    {% if user|can_add_module:"clients" %}
+                    <button class="btn btn-primary" onclick="openClientModal()">
+                        <i class="fas fa-plus me-2"></i>Nouveau Client
+                    </button>
+                    {% endif %}
+                    {% if user|has_permission:"clients.export" %}
+                    <button class="btn btn-outline-primary" onclick="exportClients()">
+                        <i class="fas fa-download me-2"></i>Exporter
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Total Clients</h6>
+                            <h3 class="mb-0">{{ total_clients }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Clients Actifs</h6>
+                            <h3 class="mb-0">{{ clients_actifs }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Particuliers</h6>
+                            <h3 class="mb-0">{{ particuliers }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-user fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Entreprises</h6>
+                            <h3 class="mb-0">{{ entreprises }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-building fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-secondary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Clients Inactifs</h6>
+                            <h3 class="mb-0">{{ clients_inactifs }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-times-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Nouveaux (7j)</h6>
+                            <h3 class="mb-0">{{ clients_recents }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulaire de recherche et filtres -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-search me-2"></i>Recherche et Filtres
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" id="searchForm">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label for="{{ search_form.search_term.id_for_label }}" class="form-label">Recherche</label>
+                                {{ search_form.search_term }}
+                            </div>
+                            <div class="col-md-2">
+                                <label for="{{ search_form.search_by.id_for_label }}" class="form-label">Rechercher par</label>
+                                {{ search_form.search_by }}
+                            </div>
+                            <div class="col-md-2">
+                                <label for="{{ search_form.type_client.id_for_label }}" class="form-label">Type</label>
+                                {{ search_form.type_client }}
+                            </div>
+                            <div class="col-md-2">
+                                <label for="{{ search_form.statut.id_for_label }}" class="form-label">Statut</label>
+                                {{ search_form.statut }}
+                            </div>
+                            <div class="col-md-3">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <label for="{{ search_form.date_debut.id_for_label }}" class="form-label">Date début</label>
+                                        {{ search_form.date_debut }}
+                                    </div>
+                                    <div class="col-6">
+                                        <label for="{{ search_form.date_fin.id_for_label }}" class="form-label">Date fin</label>
+                                        {{ search_form.date_fin }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary me-2">
+                                    <i class="fas fa-search me-2"></i>Rechercher
+                                </button>
+                                <a href="{% url 'clients:client_list' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times me-2"></i>Réinitialiser
+                                </a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des clients -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-list me-2"></i>Liste des Clients
+                            <span class="badge bg-primary ms-2">{{ total_clients }}</span>
+                        </h5>
+                        <div class="d-flex gap-2">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="showInactive">
+                                <label class="form-check-label" for="showInactive">
+                                    Afficher inactifs
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if clients %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Client</th>
+                                        <th>Type</th>
+                                        <th>Contact</th>
+                                        <th>Statut</th>
+                                        <th>Date création</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for client in clients %}
+                                    <tr class="client-row" data-client-id="{{ client.id }}">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-sm me-3">
+                                                    <div class="avatar-title rounded-circle bg-light text-primary">
+                                                        <i class="{{ client.get_icone_type }}"></i>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-0">{{ client.nom_complet }}</h6>
+                                                    <small class="text-muted">ID: {{ client.id }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{% if client.type_client == 'particulier' %}primary{% else %}info{% endif %}">
+                                                {{ client.get_type_display_short }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <div class="mb-1">
+                                                    <i class="fas fa-phone me-1"></i>
+                                                    <a href="tel:{{ client.telephone }}" class="text-decoration-none">
+                                                        {{ client.get_telephone_formatted }}
+                                                    </a>
+                                                </div>
+                                                {% if client.email %}
+                                                <div>
+                                                    <i class="fas fa-envelope me-1"></i>
+                                                    <a href="mailto:{{ client.email }}" class="text-decoration-none">
+                                                        {{ client.email }}
+                                                    </a>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if client.actif %}
+                                                <span class="badge bg-success">Actif</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Inactif</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <div class="mb-1">{{ client.date_creation|date:"d/m/Y" }}</div>
+                                                <small class="text-muted">{{ client.date_creation|date:"H:i" }}</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                {% if user|has_permission:"clients.view" %}
+                                                <button type="button" class="btn btn-sm btn-outline-primary" 
+                                                        onclick="viewClient({{ client.id }})" 
+                                                        title="Voir détails">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                {% endif %}
+                                                {% if user|can_change_module:"clients" %}
+                                                <button type="button" class="btn btn-sm btn-outline-warning" 
+                                                        onclick="editClient({{ client.id }})" 
+                                                        title="Modifier">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-{% if client.actif %}secondary{% else %}success{% endif %}" 
+                                                        onclick="toggleClientStatus({{ client.id }})" 
+                                                        title="{% if client.actif %}Désactiver{% else %}Activer{% endif %}">
+                                                    <i class="fas fa-{% if client.actif %}times{% else %}check{% endif %}"></i>
+                                                </button>
+                                                {% endif %}
+                                                {% if user|can_delete_module:"clients" %}
+                                                <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                        onclick="deleteClient({{ client.id }}, '{{ client.nom_complet }}')" 
+                                                        title="Supprimer">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Aucun client trouvé</h5>
+                            <p class="text-muted">Aucun client ne correspond à vos critères de recherche.</p>
+                            <button class="btn btn-primary" onclick="openClientModal()">
+                                <i class="fas fa-plus me-2"></i>Ajouter le premier client
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if clients.has_other_pages %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <nav aria-label="Pagination des clients">
+                <ul class="pagination justify-content-center">
+                    {% if clients.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="fas fa-angle-double-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ clients.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="fas fa-angle-left"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    {% for num in clients.paginator.page_range %}
+                        {% if clients.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > clients.number|add:'-3' and num < clients.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if clients.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ clients.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ clients.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="fas fa-angle-double-right"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal pour le formulaire client -->
+<div class="modal fade" id="clientModal" tabindex="-1" aria-labelledby="clientModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="clientModalLabel">
+                    <i class="fas fa-user-plus me-2"></i>Nouveau Client
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="clientModalBody">
+                <!-- Le contenu sera chargé via AJAX -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmation de suppression -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="fas fa-exclamation-triangle text-danger me-2"></i>Confirmation de suppression
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer le client <strong id="clientNameToDelete"></strong> ?</p>
+                <p class="text-danger"><small>Cette action est irréversible.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fas fa-trash me-2"></i>Supprimer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Variables globales
+let clientToDelete = null;
+
+// Fonction pour ouvrir le modal d'ajout de client
+function openClientModal() {
+    fetch('{% url "clients:client_create" %}')
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('clientModalBody').innerHTML = html;
+            document.getElementById('clientModalLabel').innerHTML = '<i class="fas fa-user-plus me-2"></i>Nouveau Client';
+            new bootstrap.Modal(document.getElementById('clientModal')).show();
+        });
+}
+
+// Fonction pour éditer un client
+function editClient(clientId) {
+    fetch(`{% url "clients:client_update" pk=0 %}`.replace('0', clientId))
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('clientModalBody').innerHTML = html;
+            document.getElementById('clientModalLabel').innerHTML = '<i class="fas fa-user-edit me-2"></i>Modifier Client';
+            new bootstrap.Modal(document.getElementById('clientModal')).show();
+        });
+}
+
+// Fonction pour voir les détails d'un client
+function viewClient(clientId) {
+    window.location.href = `{% url "clients:client_detail" pk=0 %}`.replace('0', clientId);
+}
+
+// Fonction pour supprimer un client
+function deleteClient(clientId, clientName) {
+    clientToDelete = clientId;
+    document.getElementById('clientNameToDelete').textContent = clientName;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+
+// Confirmation de suppression
+document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+    if (clientToDelete) {
+        fetch(`{% url "clients:client_delete" pk=0 %}`.replace('0', clientToDelete), {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Supprimer la ligne du tableau
+                document.querySelector(`[data-client-id="${clientToDelete}"]`).remove();
+                showMessage('success', data.message);
+                bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+            } else {
+                showMessage('error', data.message);
+            }
+        });
+    }
+});
+
+// Fonction pour activer/désactiver un client
+function toggleClientStatus(clientId) {
+    fetch(`{% url "clients:client_toggle_status" pk=0 %}`.replace('0', clientId), {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Recharger la page pour mettre à jour l'affichage
+            location.reload();
+            showMessage('success', data.message);
+        } else {
+            showMessage('error', data.message);
+        }
+    });
+}
+
+// Fonction pour exporter les clients
+function exportClients() {
+    const currentUrl = new URL(window.location);
+    const searchParams = currentUrl.searchParams;
+    const exportUrl = '{% url "clients:client_export" %}' + '?' + searchParams.toString();
+    window.location.href = exportUrl;
+}
+
+// Fonction pour afficher les messages
+function showMessage(type, message) {
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+    const icon = type === 'success' ? 'check-circle' : 'exclamation-circle';
+    
+    const alertHtml = `
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+            <i class="fas fa-${icon} me-2"></i>${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    // Ajouter le message en haut de la page
+    const container = document.querySelector('.container-fluid');
+    container.insertAdjacentHTML('afterbegin', alertHtml);
+    
+    // Auto-fermer après 5 secondes
+    setTimeout(() => {
+        const alert = document.querySelector('.alert');
+        if (alert) {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        }
+    }, 5000);
+}
+
+// Fonction pour récupérer le cookie CSRF
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Gestion du formulaire client via AJAX
+document.addEventListener('submit', function(e) {
+    if (e.target.closest('#clientModal')) {
+        e.preventDefault();
+        const form = e.target;
+        const formData = new FormData(form);
+        
+        // Afficher un indicateur de chargement
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Traitement...';
+        submitBtn.disabled = true;
+        
+        // Nettoyer les erreurs précédentes
+        form.querySelectorAll('.is-invalid').forEach(input => {
+            input.classList.remove('is-invalid');
+        });
+        form.querySelectorAll('.invalid-feedback').forEach(feedback => {
+            feedback.remove();
+        });
+        
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Erreur HTTP: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                showMessage('success', data.message);
+                bootstrap.Modal.getInstance(document.getElementById('clientModal')).hide();
+                // Recharger la page pour afficher le nouveau client
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                // Afficher les erreurs dans le formulaire
+                if (data.errors) {
+                    Object.keys(data.errors).forEach(field => {
+                        const input = form.querySelector(`[name="${field}"]`);
+                        if (input) {
+                            input.classList.add('is-invalid');
+                            const errorDiv = input.parentNode.querySelector('.invalid-feedback') || 
+                                           input.parentNode.appendChild(document.createElement('div'));
+                            errorDiv.className = 'invalid-feedback';
+                            errorDiv.textContent = data.errors[field][0];
+                        }
+                    });
+                } else {
+                    showMessage('error', 'Une erreur est survenue lors de la création du client.');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            showMessage('error', 'Erreur de connexion. Veuillez réessayer.');
+        })
+        .finally(() => {
+            // Restaurer le bouton
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        });
+    }
+});
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', function() {
+    // Gestion du switch pour afficher/masquer les clients inactifs
+    document.getElementById('showInactive').addEventListener('change', function() {
+        const inactiveRows = document.querySelectorAll('.client-row .badge.bg-secondary').forEach(badge => {
+            const row = badge.closest('.client-row');
+            if (this.checked) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

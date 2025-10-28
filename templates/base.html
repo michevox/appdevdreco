@@ -1,0 +1,661 @@
+{% load parametres_filters %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ PARAMETRES_GLOBAUX.nom_application|default:"DEVDRECO SOFT" }}{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #ff6000;
+            --secondary-color: #1a1a2e;
+            --accent-color: #667eea;
+            --header-height: 70px;
+            --sidebar-width: 280px;
+            --text-dark: #333;
+            --text-light: #666;
+            --bg-light: #f5f5f0;
+            --border-color: #e9ecef;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light);
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        
+        /* Header horizontal */
+        .header {
+            position: fixed;
+            top: 0;
+            left: var(--sidebar-width);
+            right: 0;
+            height: var(--header-height);
+            background: var(--primary-color);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+        
+        .header-logo {
+            display: flex;
+            align-items: center;
+            color: white;
+        }
+        
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-color) 0%, #764ba2 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.75rem;
+            font-size: 1.2rem;
+            color: white;
+        }
+        
+        .logo-text {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: white;
+        }
+        
+        /* Navigation horizontale dans le header */
+        .header-nav {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .header-nav-item {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .header-nav-item:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            text-decoration: none;
+        }
+        
+        .header-nav-item.active {
+            color: white;
+            background: var(--primary-color);
+        }
+        
+        /* Zone de recherche supprimée de la barre de navigation */
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .header-icon {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.2rem;
+            padding: 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .header-icon:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 8px;
+            height: 8px;
+            background: #ffd700;
+            border-radius: 50%;
+            border: 2px solid var(--secondary-color);
+        }
+        
+        /* Sidebar vertical */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: black;
+            z-index: 1001;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+        }
+        
+        /* Profil utilisateur */
+        .user-profile {
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            background: black;
+        }
+        
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-color) 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            color: white;
+            font-size: 2rem;
+            font-weight: 600;
+        }
+        
+        .user-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 0.25rem;
+        }
+        
+        .user-role {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        /* Navigation du sidebar */
+        .sidebar-nav {
+            flex: 1;
+            padding: 1rem 0;
+            overflow-y: auto;
+            background: black;
+        }
+        
+        .nav-section {
+            margin-bottom: 1.5rem;
+        }
+        
+        .nav-section-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 0 1.5rem 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .nav-item {
+            margin-bottom: 0.25rem;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-radius: 0 25px 25px 0;
+            margin-right: 1rem;
+            position: relative;
+            font-weight: 500;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-decoration: none;
+            transform: translateX(5px);
+        }
+        
+        .nav-link.active {
+            background: var(--primary-color);
+            color: white;
+            box-shadow: 0 2px 8px rgba(255, 96, 0, 0.5);
+        }
+        
+        .nav-link i {
+            width: 20px;
+            margin-right: 0.75rem;
+            font-size: 0.9rem;
+        }
+        
+        .nav-arrow {
+            margin-left: auto;
+            font-size: 0.8rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .nav-badge {
+            background: #007bff;
+            color: white;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            margin-left: auto;
+        }
+        
+        /* Sous-menus */
+        .sub-menu {
+            padding-left: 2rem;
+            display: none;
+            background: rgba(255, 255, 255, 0.05);
+            margin: 0.5rem 1rem 0.5rem 0;
+            border-radius: 0 15px 15px 0;
+        }
+        
+        .sub-menu.show {
+            display: block;
+        }
+        
+        .sub-menu .nav-link {
+            padding: 0.5rem 1.5rem;
+            font-size: 0.9rem;
+            margin-right: 0;
+        }
+        
+        .sub-menu .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Main content */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            margin-top: var(--header-height);
+            min-height: calc(100vh - var(--header-height));
+            background: var(--bg-light);
+            padding: 2rem;
+        }
+        
+        /* Messages */
+        .messages {
+            position: fixed;
+            top: calc(var(--header-height) + 1rem);
+            right: 2rem;
+            z-index: 1050;
+            max-width: 400px;
+        }
+        
+        .alert {
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header {
+                left: 0;
+                padding: 0 1rem;
+            }
+            
+            .header-left {
+                gap: 1rem;
+            }
+            
+            /* Zone de recherche supprimée en responsive */
+            
+            .logo-text {
+                display: none;
+            }
+            
+            .header-nav {
+                display: none;
+            }
+            
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+            
+            .messages {
+                right: 1rem;
+                left: 1rem;
+                max-width: none;
+            }
+        }
+        
+        /* Scrollbar personnalisée */
+        .sidebar-nav::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .sidebar-nav::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        .sidebar-nav::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+        
+        .sidebar-nav::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        
+        /* Animation pour les menus */
+        .nav-link {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 0;
+            background: var(--primary-color);
+            transition: width 0.3s ease;
+            z-index: -1;
+        }
+        
+        .nav-link:hover::before {
+            width: 100%;
+        }
+        
+        .nav-link:hover {
+            color: white;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Sidebar vertical -->
+    <nav class="sidebar" id="sidebar">
+        <!-- Profil utilisateur -->
+        <div class="user-profile">
+            <div class="user-avatar">
+                {% if user.is_authenticated %}
+                    {% if user.first_name %}
+                        {{ user.first_name|first|upper }}
+                    {% elif user.username %}
+                        {{ user.username|first|upper }}
+                    {% else %}
+                        U
+                    {% endif %}
+                {% else %}
+                    G
+                {% endif %}
+            </div>
+            <div class="user-name">
+                {% if user.is_authenticated %}
+                    {% if user.get_full_name %}
+                        {{ user.get_full_name }}
+                    {% elif user.first_name and user.last_name %}
+                        {{ user.first_name }} {{ user.last_name }}
+                    {% elif user.first_name %}
+                        {{ user.first_name }}
+                    {% else %}
+                        {{ user.username }}
+                    {% endif %}
+                {% else %}
+                    Invité
+                {% endif %}
+            </div>
+            <div class="user-role">
+                {% if user.is_authenticated %}
+                    {% if user.is_superuser %}
+                        Administrateur
+                    {% elif user.is_staff %}
+                        Staff
+                    {% else %}
+                        Utilisateur
+                    {% endif %}
+                {% else %}
+                    Non connecté
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Navigation -->
+        <div class="sidebar-nav">
+            <!-- Section principale -->
+            <div class="nav-section">
+                <div class="nav-section-title">Principal</div>
+                <div class="nav-item">
+                    <a href="{% url 'core:dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                        <i class="fas fa-home"></i>
+                        Tableau de bord
+                    </a>
+                </div>
+                {% if user|can_view_module:"clients" %}
+                <div class="nav-item">
+                    <a href="{% url 'clients:client_list' %}" class="nav-link {% if 'clients' in request.path %}active{% endif %}">
+                        <i class="fas fa-users"></i>
+                        Clients
+                    </a>
+                </div>
+                {% endif %}
+                {% if user|can_view_module:"fournisseurs" %}
+                <div class="nav-item">
+                    <a href="{% url 'fournisseurs:fournisseur_list' %}" class="nav-link {% if 'fournisseurs' in request.path %}active{% endif %}">
+                        <i class="fas fa-truck"></i>
+                        Fournisseurs
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Section Documents -->
+            <div class="nav-section">
+                <div class="nav-section-title">Documents</div>
+                <div class="nav-item">
+                    <a href="#" class="nav-link" onclick="toggleSubMenu('documents')">
+                        <i class="fas fa-file-alt"></i>
+                        Documents
+                        <i class="fas fa-chevron-down nav-arrow" id="documents-arrow"></i>
+                    </a>
+                    <div class="sub-menu" id="documents-submenu">
+                        {% if user|can_view_module:"devis" %}
+                        <div class="nav-item">
+                            <a href="{% url 'devis:devis_list' %}" class="nav-link {% if 'devis' in request.path %}active{% endif %}">
+                                <i class="fas fa-file-invoice"></i>
+                                Devis
+                            </a>
+                        </div>
+                        {% endif %}
+                        {% if user|can_view_module:"factures" %}
+                        <div class="nav-item">
+                            <a href="{% url 'factures:facture_list' %}" class="nav-link {% if 'factures' in request.path %}active{% endif %}">
+                                <i class="fas fa-receipt"></i>
+                                Factures
+                            </a>
+                        </div>
+                        {% endif %}
+                        {% if user|can_view_module:"commandes" %}
+                        <div class="nav-item">
+                            <a href="{% url 'commandes:commande_list' %}" class="nav-link {% if 'commandes' in request.path %}active{% endif %}">
+                                <i class="fas fa-shopping-cart"></i>
+                                Bon de commandes
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Section Gestion -->
+            <div class="nav-section">
+                <div class="nav-section-title">Gestion</div>
+                {% if user|can_view_module:"articles" %}
+                <div class="nav-item">
+                    <a href="{% url 'articles:article_list' %}" class="nav-link {% if 'articles' in request.path %}active{% endif %}">
+                        <i class="fas fa-box"></i>
+                        Articles
+                    </a>
+                </div>
+                {% endif %}
+                {% if user|can_view_module:"rapports" %}
+                <div class="nav-item">
+                    <a href="{% url 'rapports:dashboard' %}" class="nav-link {% if 'rapports' in request.path %}active{% endif %}">
+                        <i class="fas fa-chart-bar"></i>
+                        Rapports
+                    </a>
+                </div>
+                {% endif %}
+                <div class="nav-item">
+                    <a href="{% url 'aide:index' %}" class="nav-link {% if 'aide' in request.path %}active{% endif %}">
+                        <i class="fas fa-question-circle"></i>
+                        Aide
+                    </a>
+                </div>
+                {% if user|can_view_module:"parametres" %}
+                <div class="nav-item">
+                    <a href="{% url 'parametres:tableau_bord' %}" class="nav-link {% if 'parametres' in request.path %}active{% endif %}">
+                        <i class="fas fa-cog"></i>
+                        Paramètres
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Header horizontal -->
+    <header class="header">
+        <div class="header-left">
+            <div class="header-logo">
+                <div class="logo-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="logo-text">Devdreco-Soft</div>
+            </div>
+            
+            
+        </div>
+        
+        <div class="header-right">
+            <div class="header-icon" title="Aide" onclick="window.location.href='{% url 'aide:index' %}'">
+                <i class="fas fa-question-circle"></i>
+            </div>
+            {% if user|can_view_module:"parametres" %}
+            <div class="header-icon" title="Paramètres" onclick="window.location.href='{% url 'parametres:tableau_bord' %}'">
+                <i class="fas fa-cog"></i>
+            </div>
+            {% endif %}
+            {% if user.is_authenticated %}
+            <div class="header-icon" title="Déconnexion" onclick="window.location.href='{% url 'core:logout' %}'">
+                <i class="fas fa-sign-out-alt"></i>
+            </div>
+            {% endif %}
+        </div>
+    </header>
+    
+    <!-- Main content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Messages -->
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Zone de recherche supprimée
+        
+        // Toggle sous-menus
+        function toggleSubMenu(menuId) {
+            const submenu = document.getElementById(menuId + '-submenu');
+            const arrow = document.getElementById(menuId + '-arrow');
+            
+            if (submenu.classList.contains('show')) {
+                submenu.classList.remove('show');
+                arrow.classList.remove('fa-chevron-up');
+                arrow.classList.add('fa-chevron-down');
+            } else {
+                submenu.classList.add('show');
+                arrow.classList.remove('fa-chevron-down');
+                arrow.classList.add('fa-chevron-up');
+            }
+        }
+        
+        // Toggle sidebar sur mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+        
+        // Fermer les messages automatiquement
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                setTimeout(function() {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }, 5000);
+            });
+        });
+        
+        // Ajouter un bouton de toggle pour mobile
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.innerWidth <= 768) {
+                const header = document.querySelector('.header');
+                const toggleBtn = document.createElement('button');
+                toggleBtn.innerHTML = '<i class="fas fa-bars"></i>';
+                toggleBtn.className = 'btn btn-outline-light me-2';
+                toggleBtn.onclick = toggleSidebar;
+                const headerLeft = header.querySelector('.header-left');
+                if (headerLeft) {
+                    headerLeft.insertBefore(toggleBtn, headerLeft.firstChild);
+                }
+            }
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

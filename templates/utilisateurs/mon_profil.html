@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mon profil{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- En-tête -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="card-title">
+                        <i class="fas fa-user-circle mr-2"></i>
+                        Mon profil
+                    </h3>
+                    <a href="{% url 'utilisateurs:modifier_mon_profil' %}" class="btn btn-warning">
+                        <i class="fas fa-edit mr-1"></i>
+                        Modifier mon profil
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Informations personnelles -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-user mr-2"></i>
+                        Informations personnelles
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <div class="avatar-lg bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center">
+                            {{ profile.user.first_name.0|default:profile.user.username.0|upper }}
+                        </div>
+                        <h4 class="mt-2">{{ profile.user.get_full_name|default:profile.user.username }}</h4>
+                        <p class="text-muted">@{{ profile.user.username }}</p>
+                    </div>
+                    
+                    <table class="table table-sm">
+                        <tr>
+                            <td><strong>Email:</strong></td>
+                            <td>{{ profile.user.email }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Rôle:</strong></td>
+                            <td>
+                                <span class="badge badge-{% if profile.role.type_role == 'admin' %}danger{% elif profile.role.type_role == 'manager' %}warning{% else %}info{% endif %}">
+                                    {{ profile.role.nom|default:"Sans rôle" }}
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Téléphone:</strong></td>
+                            <td>{{ profile.telephone|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Poste:</strong></td>
+                            <td>{{ profile.poste|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Département:</strong></td>
+                            <td>{{ profile.departement|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Date d'embauche:</strong></td>
+                            <td>{{ profile.date_embauche|date:"d/m/Y"|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Dernière connexion:</strong></td>
+                            <td>
+                                {% if profile.derniere_connexion %}
+                                    {{ profile.derniere_connexion|date:"d/m/Y H:i" }}
+                                {% else %}
+                                    <span class="text-muted">Jamais</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mes permissions -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-key mr-2"></i>
+                        Mes permissions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Permissions accordées -->
+                        <div class="col-md-6">
+                            <h6 class="text-success">
+                                <i class="fas fa-check-circle mr-1"></i>
+                                Permissions accordées ({{ permissions_accordees|length }})
+                            </h6>
+                            {% if permissions_accordees %}
+                                <div class="list-group list-group-flush">
+                                    {% for permission in permissions_accordees %}
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>{{ permission }}</span>
+                                        <span class="badge badge-success">✓</span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="text-muted">
+                                    <i class="fas fa-lock mr-1"></i>
+                                    Aucune permission accordée
+                                </p>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Permissions refusées -->
+                        <div class="col-md-6">
+                            <h6 class="text-danger">
+                                <i class="fas fa-times-circle mr-1"></i>
+                                Permissions refusées ({{ permissions_refusees|length }})
+                            </h6>
+                            {% if permissions_refusees %}
+                                <div class="list-group list-group-flush">
+                                    {% for permission in permissions_refusees %}
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>{{ permission }}</span>
+                                        <span class="badge badge-danger">✗</span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="text-muted">
+                                    <i class="fas fa-check-circle mr-1"></i>
+                                    Aucune permission refusée
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Historique des connexions récentes -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        <i class="fas fa-history mr-2"></i>
+                        Mes connexions récentes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if connexions %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Date de connexion</th>
+                                        <th>Adresse IP</th>
+                                        <th>User Agent</th>
+                                        <th>Statut</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for connexion in connexions %}
+                                    <tr>
+                                        <td>{{ connexion.date_connexion|date:"d/m/Y H:i:s" }}</td>
+                                        <td>{{ connexion.adresse_ip }}</td>
+                                        <td>
+                                            <small>{{ connexion.user_agent|truncatechars:50 }}</small>
+                                        </td>
+                                        <td>
+                                            {% if connexion.reussie %}
+                                                <span class="badge badge-success">Réussie</span>
+                                            {% else %}
+                                                <span class="badge badge-danger">Échouée</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">
+                            <i class="fas fa-clock fa-2x mb-2"></i>
+                            <br>
+                            Aucune connexion enregistrée
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

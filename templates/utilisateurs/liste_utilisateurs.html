@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestion des utilisateurs{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="card-title">
+                        <i class="fas fa-users mr-2"></i>
+                        Gestion des utilisateurs
+                    </h3>
+                    <a href="{% url 'utilisateurs:ajouter_utilisateur' %}" class="btn btn-primary">
+                        <i class="fas fa-plus mr-1"></i>
+                        Ajouter un utilisateur
+                    </a>
+                </div>
+                
+                <div class="card-body">
+                    <!-- Filtres de recherche -->
+                    <form method="get" class="mb-4">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="recherche">Recherche</label>
+                                    <input type="text" class="form-control" id="recherche" name="recherche" 
+                                           value="{{ recherche }}" placeholder="Nom, email, username...">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="role">Rôle</label>
+                                    <select class="form-control" id="role" name="role">
+                                        <option value="">Tous les rôles</option>
+                                        {% for role in roles %}
+                                            <option value="{{ role.id }}" {% if role_filter == role.id|stringformat:"s" %}selected{% endif %}>
+                                                {{ role.nom }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label for="actif">Statut</label>
+                                    <select class="form-control" id="actif" name="actif">
+                                        <option value="">Tous</option>
+                                        <option value="1" {% if actif_filter == "1" %}selected{% endif %}>Actifs</option>
+                                        <option value="0" {% if actif_filter == "0" %}selected{% endif %}>Inactifs</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label>&nbsp;</label>
+                                    <div>
+                                        <button type="submit" class="btn btn-info">
+                                            <i class="fas fa-search mr-1"></i>
+                                            Filtrer
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <!-- Tableau des utilisateurs -->
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>Utilisateur</th>
+                                    <th>Email</th>
+                                    <th>Rôle</th>
+                                    <th>Département</th>
+                                    <th>Dernière connexion</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for utilisateur in page_obj %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mr-2">
+                                                {{ utilisateur.user.first_name.0|default:utilisateur.user.username.0|upper }}
+                                            </div>
+                                            <div>
+                                                <strong>{{ utilisateur.user.get_full_name|default:utilisateur.user.username }}</strong>
+                                                <br>
+                                                <small class="text-muted">@{{ utilisateur.user.username }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ utilisateur.user.email }}</td>
+                                    <td>
+                                        <span class="badge badge-{% if utilisateur.role.type_role == 'admin' %}danger{% elif utilisateur.role.type_role == 'manager' %}warning{% else %}info{% endif %}">
+                                            {{ utilisateur.role.nom|default:"Sans rôle" }}
+                                        </span>
+                                    </td>
+                                    <td>{{ utilisateur.departement|default:"-" }}</td>
+                                    <td>
+                                        {% if utilisateur.derniere_connexion %}
+                                            {{ utilisateur.derniere_connexion|date:"d/m/Y H:i" }}
+                                        {% else %}
+                                            <span class="text-muted">Jamais</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if utilisateur.actif %}
+                                            <span class="badge badge-success">Actif</span>
+                                        {% else %}
+                                            <span class="badge badge-secondary">Inactif</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'utilisateurs:detail_utilisateur' utilisateur.user.id %}" 
+                                               class="btn btn-sm btn-info" title="Voir les détails">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{% url 'utilisateurs:modifier_utilisateur' utilisateur.user.id %}" 
+                                               class="btn btn-sm btn-warning" title="Modifier">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'utilisateurs:gerer_permissions_utilisateur' utilisateur.user.id %}" 
+                                               class="btn btn-sm btn-secondary" title="Gérer les permissions">
+                                                <i class="fas fa-key"></i>
+                                            </a>
+                                            {% if utilisateur.user != user %}
+                                            <button type="button" class="btn btn-sm btn-danger" 
+                                                    onclick="supprimerUtilisateur({{ utilisateur.user.id }}, '{{ utilisateur.user.username }}')" 
+                                                    title="Supprimer">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted">
+                                        <i class="fas fa-users fa-3x mb-3"></i>
+                                        <br>
+                                        Aucun utilisateur trouvé
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    {% if page_obj.has_other_pages %}
+                    <nav aria-label="Pagination des utilisateurs">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1{% if recherche %}&recherche={{ recherche }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if actif_filter %}&actif={{ actif_filter }}{% endif %}">Premier</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if recherche %}&recherche={{ recherche }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if actif_filter %}&actif={{ actif_filter }}{% endif %}">Précédent</a>
+                                </li>
+                            {% endif %}
+                            
+                            <li class="page-item active">
+                                <span class="page-link">
+                                    Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+                                </span>
+                            </li>
+                            
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if recherche %}&recherche={{ recherche }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if actif_filter %}&actif={{ actif_filter }}{% endif %}">Suivant</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if recherche %}&recherche={{ recherche }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if actif_filter %}&actif={{ actif_filter }}{% endif %}">Dernier</a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmation de suppression -->
+<div class="modal fade" id="modalSuppression" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmer la suppression</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer l'utilisateur <strong id="nomUtilisateur"></strong> ?</p>
+                <p class="text-danger"><small>Cette action est irréversible.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                <form id="formSuppression" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Supprimer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function supprimerUtilisateur(userId, username) {
+    document.getElementById('nomUtilisateur').textContent = username;
+    document.getElementById('formSuppression').action = '/utilisateurs/supprimer/' + userId + '/';
+    $('#modalSuppression').modal('show');
+}
+</script>
+{% endblock %}

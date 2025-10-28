@@ -1,0 +1,276 @@
+{% extends 'base.html' %}
+{% load parametres_filters %}
+{% load static %}
+
+{% block title %}{{ fournisseur.nom_complet }} - DEVDRECO SOFT{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- En-tête de la page -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-0">
+                <i class="fas fa-truck me-2 text-primary"></i>{{ fournisseur.nom_complet }}
+            </h4>
+            <p class="text-muted mb-0">
+                <span class="badge bg-{% if fournisseur.type_fournisseur == 'entreprise' %}primary{% elif fournisseur.type_fournisseur == 'particulier' %}secondary{% elif fournisseur.type_fournisseur == 'grossiste' %}info{% elif fournisseur.type_fournisseur == 'fabricant' %}success{% else %}warning{% endif %} me-2">
+                    {{ fournisseur.get_type_fournisseur_display }}
+                </span>
+                <span class="badge bg-{% if fournisseur.actif %}success{% else %}danger{% endif %}">
+                    {% if fournisseur.actif %}Actif{% else %}Inactif{% endif %}
+                </span>
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'fournisseurs:fournisseur_update' fournisseur.pk %}" class="btn btn-outline-primary">
+                <i class="fas fa-edit me-2"></i>Modifier
+            </a>
+            <form method="post" action="{% url 'fournisseurs:fournisseur_toggle_status' fournisseur.pk %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-{% if fournisseur.actif %}warning{% else %}success{% endif %}">
+                    <i class="fas fa-{% if fournisseur.actif %}pause{% else %}play{% endif %} me-2"></i>
+                    {% if fournisseur.actif %}Désactiver{% else %}Activer{% endif %}
+                </button>
+            </form>
+            <a href="{% url 'fournisseurs:fournisseur_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Retour à la liste
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Informations du fournisseur -->
+        <div class="col-lg-8 mb-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info-circle me-2 text-primary"></i>
+                        Informations du fournisseur
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Contact</h6>
+                            {% if fournisseur.telephone %}
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-phone text-muted me-2"></i>
+                                <span>{{ fournisseur.get_telephone_formate }}</span>
+                            </div>
+                            {% endif %}
+                            
+                            {% if fournisseur.email %}
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-envelope text-muted me-2"></i>
+                                <a href="mailto:{{ fournisseur.email }}" class="text-decoration-none">{{ fournisseur.email }}</a>
+                            </div>
+                            {% endif %}
+                            
+                            {% if fournisseur.site_web %}
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-globe text-muted me-2"></i>
+                                <a href="{{ fournisseur.site_web }}" target="_blank" class="text-decoration-none">{{ fournisseur.site_web }}</a>
+                            </div>
+                            {% endif %}
+                            
+                            {% if fournisseur.contact_principal %}
+                            <div class="d-flex align-items-center mb-2">
+                                <i class="fas fa-user text-muted me-2"></i>
+                                <span>{{ fournisseur.contact_principal }}{% if fournisseur.fonction_contact %} - {{ fournisseur.fonction_contact }}{% endif %}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Adresse</h6>
+                            {% if fournisseur.get_adresse_complete != "Non renseignée" %}
+                            <div class="d-flex align-items-start mb-2">
+                                <i class="fas fa-map-marker-alt text-muted me-2 mt-1"></i>
+                                <div>
+                                    {% if fournisseur.adresse %}{{ fournisseur.adresse }}<br>{% endif %}
+                                    {% if fournisseur.ville %}{{ fournisseur.ville }}{% endif %}
+                                    {% if fournisseur.pays %}, {{ fournisseur.pays }}{% endif %}
+                                </div>
+                            </div>
+                            {% else %}
+                            <p class="text-muted">Non renseignée</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if fournisseur.conditions_paiement or fournisseur.delai_livraison %}
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6">
+                            {% if fournisseur.conditions_paiement %}
+                            <h6 class="text-muted">Conditions de paiement</h6>
+                            <p>{{ fournisseur.conditions_paiement }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            {% if fournisseur.delai_livraison %}
+                            <h6 class="text-muted">Délai de livraison</h6>
+                            <p>{{ fournisseur.delai_livraison }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if fournisseur.notes %}
+                    <hr>
+                    <h6 class="text-muted">Notes</h6>
+                    <p class="text-muted">{{ fournisseur.notes }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistiques et actions -->
+        <div class="col-lg-4 mb-4">
+            <!-- Statistiques des produits -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-bar me-2 text-success"></i>
+                        Statistiques des produits
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <h4 class="text-primary">{{ produits_stats.total }}</h4>
+                            <small class="text-muted">Total produits</small>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="text-success">{{ produits_stats.actifs }}</h4>
+                            <small class="text-muted">Actifs</small>
+                        </div>
+                    </div>
+                    {% if produits_stats.prix_moyen > 0 %}
+                    <hr>
+                    <div class="text-center">
+                        <h6 class="text-muted">Prix moyen d'achat</h6>
+                        <h5 class="text-info">{{ produits_stats.prix_moyen|format_montant }}</h5>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Actions rapides -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="mb-0">
+                        <i class="fas fa-bolt me-2 text-warning"></i>
+                        Actions rapides
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'fournisseurs:produit_fournisseur_create' %}?fournisseur={{ fournisseur.pk }}" class="btn btn-outline-primary">
+                            <i class="fas fa-plus me-2"></i>Ajouter un produit
+                        </a>
+                        <a href="{% url 'fournisseurs:produit_fournisseur_list' %}?fournisseur={{ fournisseur.pk }}" class="btn btn-outline-info">
+                            <i class="fas fa-box me-2"></i>Voir tous les produits
+                        </a>
+                        <button class="btn btn-outline-success" onclick="window.print()">
+                            <i class="fas fa-print me-2"></i>Imprimer
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Produits du fournisseur -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="fas fa-box me-2 text-info"></i>
+                        Produits fournis ({{ produits.count }})
+                    </h6>
+                    <a href="{% url 'fournisseurs:produit_fournisseur_create' %}?fournisseur={{ fournisseur.pk }}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus me-2"></i>Ajouter un produit
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if produits %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Article</th>
+                                        <th>Référence fournisseur</th>
+                                        <th>Prix d'achat</th>
+                                        <th>Délai livraison</th>
+                                        <th>Stock</th>
+                                        <th>Statut</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for produit in produits %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ produit.article.designation }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ produit.article.categorie.libelle|default:"Sans catégorie" }}</small>
+                                        </td>
+                                        <td>{{ produit.reference_fournisseur|default:"-" }}</td>
+                                        <td>
+                                            <strong>{{ produit.get_prix_achat_formate }}</strong>
+                                            {% if produit.get_marge_brute %}
+                                            <br>
+                                            <small class="text-success">Marge: {{ produit.get_marge_brute|format_montant }}</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ produit.delai_livraison }} jour{{ produit.delai_livraison|pluralize }}</td>
+                                        <td>
+                                            <span class="badge bg-{% if produit.stock_disponible > 0 %}success{% else %}warning{% endif %}">
+                                                {{ produit.stock_disponible }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{% if produit.actif %}success{% else %}danger{% endif %}">
+                                                {% if produit.actif %}Actif{% else %}Inactif{% endif %}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{% url 'fournisseurs:produit_fournisseur_update' produit.pk %}" class="btn btn-outline-primary" title="Modifier">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <form method="post" action="{% url 'fournisseurs:produit_fournisseur_delete' produit.pk %}" 
+                                                      onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')" class="d-inline">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-outline-danger" title="Supprimer">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-box fa-3x text-muted mb-3"></i>
+                            <h6 class="text-muted">Aucun produit associé</h6>
+                            <p class="text-muted">Ce fournisseur n'a pas encore de produits associés.</p>
+                            <a href="{% url 'fournisseurs:produit_fournisseur_create' %}?fournisseur={{ fournisseur.pk }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Ajouter le premier produit
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+

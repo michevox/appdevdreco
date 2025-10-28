@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - DEVDRECO SOFT{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-truck me-2"></i>{{ title }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <!-- Informations générales -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>Informations générales
+                                </h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.nom_complet.id_for_label }}" class="form-label">
+                                    Nom complet / Raison sociale *
+                                </label>
+                                {{ form.nom_complet }}
+                                {% if form.nom_complet.errors %}
+                                    <div class="text-danger small">{{ form.nom_complet.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.type_fournisseur.id_for_label }}" class="form-label">
+                                    Type de fournisseur
+                                </label>
+                                {{ form.type_fournisseur }}
+                                {% if form.type_fournisseur.errors %}
+                                    <div class="text-danger small">{{ form.type_fournisseur.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Contact -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="fas fa-phone me-2"></i>Contact
+                                </h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Téléphone *</label>
+                                <div class="input-group">
+                                    {{ form.phone_country_code }}
+                                    {{ form.phone_number }}
+                                </div>
+                                {% if form.phone_number.errors %}
+                                    <div class="text-danger small">{{ form.phone_number.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                    <div class="text-danger small">{{ form.email.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.contact_principal.id_for_label }}" class="form-label">Contact principal</label>
+                                {{ form.contact_principal }}
+                                {% if form.contact_principal.errors %}
+                                    <div class="text-danger small">{{ form.contact_principal.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.fonction_contact.id_for_label }}" class="form-label">Fonction du contact</label>
+                                {{ form.fonction_contact }}
+                                {% if form.fonction_contact.errors %}
+                                    <div class="text-danger small">{{ form.fonction_contact.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.site_web.id_for_label }}" class="form-label">Site web</label>
+                                {{ form.site_web }}
+                                {% if form.site_web.errors %}
+                                    <div class="text-danger small">{{ form.site_web.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Adresse -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="fas fa-map-marker-alt me-2"></i>Adresse
+                                </h6>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.adresse.id_for_label }}" class="form-label">Adresse complète</label>
+                                {{ form.adresse }}
+                                {% if form.adresse.errors %}
+                                    <div class="text-danger small">{{ form.adresse.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.ville.id_for_label }}" class="form-label">Ville</label>
+                                {{ form.ville }}
+                                {% if form.ville.errors %}
+                                    <div class="text-danger small">{{ form.ville.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.pays.id_for_label }}" class="form-label">Pays</label>
+                                {{ form.pays }}
+                                {% if form.pays.errors %}
+                                    <div class="text-danger small">{{ form.pays.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Conditions commerciales -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="fas fa-handshake me-2"></i>Conditions commerciales
+                                </h6>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.conditions_paiement.id_for_label }}" class="form-label">Conditions de paiement</label>
+                                {{ form.conditions_paiement }}
+                                {% if form.conditions_paiement.errors %}
+                                    <div class="text-danger small">{{ form.conditions_paiement.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="{{ form.delai_livraison.id_for_label }}" class="form-label">Délai de livraison</label>
+                                {{ form.delai_livraison }}
+                                {% if form.delai_livraison.errors %}
+                                    <div class="text-danger small">{{ form.delai_livraison.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Statut et notes -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-primary mb-3">
+                                    <i class="fas fa-cog me-2"></i>Statut et notes
+                                </h6>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <div class="form-check">
+                                    {{ form.actif }}
+                                    <label class="form-check-label" for="{{ form.actif.id_for_label }}">
+                                        Fournisseur actif
+                                    </label>
+                                </div>
+                                {% if form.actif.errors %}
+                                    <div class="text-danger small">{{ form.actif.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label for="{{ form.notes.id_for_label }}" class="form-label">Notes internes</label>
+                                {{ form.notes }}
+                                {% if form.notes.errors %}
+                                    <div class="text-danger small">{{ form.notes.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Boutons d'action -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <a href="{% if fournisseur %}{% url 'fournisseurs:fournisseur_detail' fournisseur.pk %}{% else %}{% url 'fournisseurs:fournisseur_list' %}{% endif %}" class="btn btn-outline-secondary">
+                                        <i class="fas fa-arrow-left me-2"></i>Annuler
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-2"></i>{{ submit_text }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+

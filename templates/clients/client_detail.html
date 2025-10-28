@@ -1,0 +1,362 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ client.nom_complet }} - Détails Client - DEVDRECO SOFT{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête de la page -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'clients:client_list' %}">Clients</a></li>
+                            <li class="breadcrumb-item active">{{ client.nom_complet }}</li>
+                        </ol>
+                    </nav>
+                    <h1 class="h3 mb-0 text-dark">
+                        <i class="fas fa-user me-2"></i>{{ client.nom_complet }}
+                    </h1>
+                    <p class="text-muted mb-0">Détails du client</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'clients:client_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Retour
+                    </a>
+                    <button class="btn btn-warning" onclick="editClient({{ client.id }})">
+                        <i class="fas fa-edit me-2"></i>Modifier
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Informations principales du client -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Informations du client
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Nom complet / Raison sociale</label>
+                                <p class="mb-0">{{ client.nom_complet }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Type de client</label>
+                                <p class="mb-0">
+                                    <i class="fas {{ client.get_icone_type }} me-2"></i>
+                                    {{ client.get_type_display_short }}
+                                </p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Statut</label>
+                                <div class="mb-0">{{ client.get_statut_badge|safe }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Téléphone</label>
+                                <p class="mb-0">
+                                    <i class="fas fa-phone me-2"></i>
+                                    {{ client.get_telephone_formatted }}
+                                </p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Email</label>
+                                <p class="mb-0">
+                                    {% if client.email %}
+                                        <i class="fas fa-envelope me-2"></i>
+                                        <a href="mailto:{{ client.email }}">{{ client.email }}</a>
+                                    {% else %}
+                                        <span class="text-muted">Non renseigné</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Adresse</label>
+                                <p class="mb-0">
+                                    {% if client.adresse %}
+                                        <i class="fas fa-map-marker-alt me-2"></i>
+                                        {{ client.adresse|linebreaks }}
+                                    {% else %}
+                                        <span class="text-muted">Non renseignée</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Historique des devis -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-file-invoice me-2"></i>Devis ({{ nombre_devis }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if nombre_devis > 0 %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Numéro</th>
+                                        <th>Date</th>
+                                        <th>Montant HT</th>
+                                        <th>Statut</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for devis in client.devis_set.all|slice:":5" %}
+                                    <tr>
+                                        <td>{{ devis.numero }}</td>
+                                        <td>{{ devis.date_creation|date:"d/m/Y" }}</td>
+                                        <td>{{ devis.montant_ht|floatformat:2 }} €</td>
+                                        <td>
+                                            <span class="badge bg-{{ devis.get_statut_color }}">
+                                                {{ devis.get_statut_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'devis:devis_detail' pk=devis.pk %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% if nombre_devis > 5 %}
+                            <div class="text-center mt-3">
+                                <a href="{% url 'devis:devis_list' %}?client={{ client.id }}" class="btn btn-outline-primary">
+                                    Voir tous les devis ({{ nombre_devis }})
+                                </a>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-file-invoice fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Aucun devis pour ce client</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Historique des factures -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-receipt me-2"></i>Factures ({{ nombre_factures }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if nombre_factures > 0 %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Numéro</th>
+                                        <th>Date émission</th>
+                                        <th>Échéance</th>
+                                        <th>Montant TTC</th>
+                                        <th>Statut paiement</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for facture in client.facture_set.all|slice:":5" %}
+                                    <tr>
+                                        <td>{{ facture.numero }}</td>
+                                        <td>{{ facture.date_emission|date:"d/m/Y" }}</td>
+                                        <td>{{ facture.date_echeance|date:"d/m/Y" }}</td>
+                                        <td>{{ facture.montant_ttc|floatformat:2 }} €</td>
+                                        <td>
+                                            <span class="badge bg-{{ facture.get_statut_paiement_color }}">
+                                                {{ facture.get_statut_paiement_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="{% url 'factures:facture_detail' pk=facture.pk %}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% if nombre_factures > 5 %}
+                            <div class="text-center mt-3">
+                                <a href="{% url 'factures:facture_list' %}?client={{ client.id }}" class="btn btn-outline-primary">
+                                    Voir toutes les factures ({{ nombre_factures }})
+                                </a>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Aucune facture pour ce client</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar avec statistiques et actions -->
+        <div class="col-lg-4">
+            <!-- Statistiques du client -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>Statistiques
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <div class="border-end">
+                                <h4 class="text-primary mb-1">{{ nombre_devis }}</h4>
+                                <small class="text-muted">Devis</small>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <h4 class="text-success mb-1">{{ nombre_factures }}</h4>
+                            <small class="text-muted">Factures</small>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="text-center">
+                        <h5 class="text-info mb-1">{{ total_factures|floatformat:2 }} €</h5>
+                        <small class="text-muted">Total facturé</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informations de création -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-calendar me-2"></i>Informations
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Date de création</label>
+                        <p class="mb-0">{{ client.date_creation|date:"d/m/Y à H:i" }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Dernière modification</label>
+                        <p class="mb-0">{{ client.date_modification|date:"d/m/Y à H:i" }}</p>
+                    </div>
+                    {% if derniere_activite %}
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Dernière activité</label>
+                        <p class="mb-0">{{ derniere_activite|date:"d/m/Y à H:i" }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Actions rapides -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bolt me-2"></i>Actions rapides
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'devis:devis_create' %}?client={{ client.id }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Nouveau devis
+                        </a>
+                        <a href="{% url 'factures:facture_create' %}?client={{ client.id }}" class="btn btn-success">
+                            <i class="fas fa-plus me-2"></i>Nouvelle facture
+                        </a>
+                        <button class="btn btn-{% if client.actif %}secondary{% else %}success{% endif %}" 
+                                onclick="toggleClientStatus({{ client.id }})">
+                            <i class="fas fa-{% if client.actif %}times{% else %}check{% endif %} me-2"></i>
+                            {% if client.actif %}Désactiver{% else %}Activer{% endif %}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal d'édition du client -->
+<div class="modal fade" id="clientModal" tabindex="-1" aria-labelledby="clientModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="clientModalLabel">
+                    <i class="fas fa-user-edit me-2"></i>Modifier Client
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="clientModalBody">
+                <!-- Le contenu sera chargé dynamiquement -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Fonction pour éditer un client
+function editClient(clientId) {
+    fetch(`{% url "clients:client_update" pk=0 %}`.replace('0', clientId))
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('clientModalBody').innerHTML = html;
+            document.getElementById('clientModalLabel').innerHTML = '<i class="fas fa-user-edit me-2"></i>Modifier Client';
+            new bootstrap.Modal(document.getElementById('clientModal')).show();
+        });
+}
+
+// Fonction pour activer/désactiver un client
+function toggleClientStatus(clientId) {
+    fetch(`{% url "clients:client_toggle_status" pk=0 %}`.replace('0', clientId), {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Erreur: ' + data.message);
+        }
+    });
+}
+
+// Fonction pour récupérer le cookie CSRF
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

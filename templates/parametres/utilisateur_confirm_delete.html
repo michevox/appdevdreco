@@ -1,0 +1,67 @@
+{% extends 'parametres/base_parametres.html' %}
+
+{% block parametres_content %}
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Confirmer la suppression
+                </h5>
+            </div>
+            <div class="card-body text-center">
+                <div class="mb-4">
+                    <i class="fas fa-user-times fa-4x text-danger mb-3"></i>
+                    <h4>Êtes-vous sûr ?</h4>
+                    <p class="text-muted">
+                        Cette action ne peut pas être annulée. L'utilisateur sera définitivement supprimé.
+                    </p>
+                </div>
+                
+                <div class="alert alert-warning">
+                    <h6><i class="fas fa-info-circle me-2"></i>Utilisateur à supprimer :</h6>
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <div class="avatar-sm me-3">
+                            <div class="avatar-title rounded-circle bg-light text-primary">
+                                <i class="fas fa-user"></i>
+                            </div>
+                        </div>
+                        <div class="text-start">
+                            <h6 class="mb-0">{{ object.user.get_full_name|default:object.user.username }}</h6>
+                            <small class="text-muted">@{{ object.user.username }}</small>
+                        </div>
+                    </div>
+                    <ul class="list-unstyled mb-0">
+                        <li><strong>Email :</strong> {{ object.user.email }}</li>
+                        <li><strong>Rôle :</strong> {{ object.get_role_display }}</li>
+                        <li><strong>Poste :</strong> {{ object.poste|default:"Non renseigné" }}</li>
+                        <li><strong>Département :</strong> {{ object.departement|default:"Non renseigné" }}</li>
+                        <li><strong>Date de création :</strong> {{ object.date_creation|date:"d/m/Y" }}</li>
+                    </ul>
+                </div>
+                
+                <div class="alert alert-danger">
+                    <h6><i class="fas fa-exclamation-triangle me-2"></i>Attention !</h6>
+                    <ul class="mb-0 text-start">
+                        <li>Toutes les données associées à cet utilisateur seront perdues</li>
+                        <li>Les sessions actives seront terminées</li>
+                        <li>Cette action est irréversible</li>
+                    </ul>
+                </div>
+                
+                <form method="post" class="d-inline">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="{% url 'parametres:utilisateur_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Annuler
+                        </a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash me-2"></i>Oui, supprimer définitivement
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,559 @@
+{% extends 'base.html' %}
+{% load parametres_filters %}
+
+{% block title %}Gestion des Devis - {{ PARAMETRES_GLOBAUX.nom_application|default:"DEVDRECO SOFT" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête de la page -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0 text-dark">
+                        <i class="fas fa-file-invoice me-2"></i>Gestion des Devis
+                    </h1>
+                    <p class="text-muted mb-0">Gérez vos devis et propositions commerciales</p>
+                </div>
+                <div class="d-flex gap-2">
+                    {% if user|can_add_module:"devis" %}
+                    <a href="{% url 'devis:devis_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Nouveau Devis
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Total Devis</h6>
+                            <h3 class="mb-0">{{ total_devis }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-file-invoice fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-secondary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Brouillons</h6>
+                            <h3 class="mb-0">{{ devis_brouillon }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-edit fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">En attente</h6>
+                            <h3 class="mb-0">{{ devis_en_attente }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Acceptés</h6>
+                            <h3 class="mb-0">{{ devis_acceptes }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Refusés</h6>
+                            <h3 class="mb-0">{{ devis_refuses }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-times-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-secondary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Total HT</h6>
+                            <h3 class="mb-0">{% if total_montant_ht %}{{ total_montant_ht|format_montant_simple }}{% else %}0 GNF{% endif %}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-money-bill fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulaire de recherche et filtres -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-search me-2"></i>Recherche et Filtres
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" id="searchForm">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label for="search_term" class="form-label">Recherche</label>
+                                <input type="text" class="form-control" id="search_term" name="q" value="{{ request.GET.q }}" placeholder="Numéro, client, objet...">
+                            </div>
+                            <div class="col-md-2">
+                                <label for="statut_filter" class="form-label">Statut</label>
+                                <select class="form-control" id="statut_filter" name="statut">
+                                    <option value="">Tous</option>
+                                    <option value="brouillon" {% if request.GET.statut == 'brouillon' %}selected{% endif %}>Brouillon</option>
+                                    <option value="en_attente" {% if request.GET.statut == 'en_attente' %}selected{% endif %}>En attente</option>
+                                    <option value="accepte" {% if request.GET.statut == 'accepte' %}selected{% endif %}>Accepté</option>
+                                    <option value="refuse" {% if request.GET.statut == 'refuse' %}selected{% endif %}>Refusé</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="client_filter" class="form-label">Client</label>
+                                <select class="form-control" id="client_filter" name="client">
+                                    <option value="">Tous</option>
+                                    {% for client in clients %}
+                                    <option value="{{ client.id }}" {% if request.GET.client == client.id|stringformat:"s" %}selected{% endif %}>{{ client.nom_complet }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <label for="date_debut" class="form-label">Date début</label>
+                                        <input type="date" class="form-control" id="date_debut" name="date_debut" value="{{ request.GET.date_debut }}">
+                                    </div>
+                                    <div class="col-6">
+                                        <label for="date_fin" class="form-label">Date fin</label>
+                                        <input type="date" class="form-control" id="date_fin" name="date_fin" value="{{ request.GET.date_fin }}">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <label class="form-label">&nbsp;</label>
+                                        <button type="submit" class="btn btn-primary w-100">
+                                            <i class="fas fa-search me-2"></i>
+                                        </button>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label">&nbsp;</label>
+                                        <a href="{% url 'devis:devis_list' %}" class="btn btn-outline-secondary w-100">
+                                            <i class="fas fa-times me-2"></i>Reset
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des devis -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-list me-2"></i>Liste des Devis
+                            <span class="badge bg-primary ms-2">{{ total_devis }}</span>
+                        </h5>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if devis_list %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Devis</th>
+                                        <th>Client</th>
+                                        <th>Statut</th>
+                                        <th>Montants</th>
+                                        <th>Dates</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for devis in devis_list %}
+                                    <tr class="devis-row" data-devis-id="{{ devis.id }}">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-sm me-3">
+                                                    <div class="avatar-title rounded-circle bg-light text-primary">
+                                                        <i class="fas fa-file-invoice"></i>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-0">{{ devis.numero }}</h6>
+                                                    <small class="text-muted">{{ devis.objet|truncatechars:50 }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <h6 class="mb-0">{{ devis.client.nom_complet }}</h6>
+                                                <small class="text-muted">{{ devis.client.get_type_display_short }}</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if devis.statut == 'brouillon' %}
+                                                <span class="badge bg-secondary">Brouillon</span>
+                                            {% elif devis.statut == 'en_attente' %}
+                                                <span class="badge bg-warning">En attente</span>
+                                            {% elif devis.statut == 'accepte' %}
+                                                <span class="badge bg-success">Accepté</span>
+                                            {% elif devis.statut == 'refuse' %}
+                                                <span class="badge bg-danger">Refusé</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <div class="mb-1">
+                                                    <strong>HT: {% if devis.montant_ht %}{{ devis.montant_ht|format_montant_simple }}{% else %}0 GNF{% endif %}</strong>
+                                                </div>
+                                                <small class="text-muted">TTC: {% if devis.montant_ttc %}{{ devis.montant_ttc|format_montant_simple }}{% else %}0 GNF{% endif %}</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <div class="mb-1">Créé: {{ devis.date_creation|date:"d/m/Y" }}</div>
+                                                <small class="text-muted">Validité: {{ devis.date_validite|date:"d/m/Y" }}</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                {% if user|has_permission:"devis.view" %}
+                                                <button type="button" class="btn btn-sm btn-outline-primary view-devis-btn" 
+                                                        data-devis-id="{{ devis.id }}" 
+                                                        title="Voir détails">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                {% endif %}
+                                                {% if user|can_change_module:"devis" %}
+                                                <button type="button" class="btn btn-sm btn-outline-warning edit-devis-btn" 
+                                                        data-devis-id="{{ devis.id }}" 
+                                                        title="Modifier">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                {% endif %}
+                                                {% if user|can_delete_module:"devis" %}
+                                                <button type="button" class="btn btn-sm btn-outline-danger delete-devis-btn" 
+                                                        data-devis-id="{{ devis.id }}" 
+                                                        data-devis-numero="{{ devis.numero }}" 
+                                                        title="Supprimer">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-file-invoice fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Aucun devis trouvé</h5>
+                            <p class="text-muted">Aucun devis ne correspond à vos critères de recherche.</p>
+                            <a href="{% url 'devis:devis_create' %}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Créer le premier devis
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if devis_list.has_other_pages %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <nav aria-label="Pagination des devis">
+                <ul class="pagination justify-content-center">
+                    {% if devis_list.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="fas fa-angle-double-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ devis_list.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="fas fa-angle-left"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    {% for num in devis_list.paginator.page_range %}
+                        {% if devis_list.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > devis_list.number|add:'-3' and num < devis_list.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if devis_list.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ devis_list.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ devis_list.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="fas fa-angle-double-right"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal de confirmation de suppression -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="fas fa-exclamation-triangle text-danger me-2"></i>Confirmation de suppression
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer le devis <strong id="devisNumeroToDelete"></strong> ?</p>
+                <p class="text-danger"><small>Cette action est irréversible.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fas fa-trash me-2"></i>Supprimer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Variables globales
+    let devisToDelete = null;
+    
+    // Gestionnaire pour voir les détails d'un devis
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.view-devis-btn')) {
+            const btn = e.target.closest('.view-devis-btn');
+            const devisId = btn.getAttribute('data-devis-id');
+            window.location.href = `{% url 'devis:devis_detail' pk=0 %}`.replace('0', devisId);
+        }
+        
+        // Gestionnaire pour éditer un devis
+        if (e.target.closest('.edit-devis-btn')) {
+            const btn = e.target.closest('.edit-devis-btn');
+            const devisId = btn.getAttribute('data-devis-id');
+            window.location.href = `{% url 'devis:devis_update' pk=0 %}`.replace('0', devisId);
+        }
+        
+        // Gestionnaire pour supprimer un devis
+        if (e.target.closest('.delete-devis-btn')) {
+            const btn = e.target.closest('.delete-devis-btn');
+            const devisId = btn.getAttribute('data-devis-id');
+            const devisNumero = btn.getAttribute('data-devis-numero');
+            deleteDevis(devisId, devisNumero);
+        }
+    });
+    
+    // Fonction pour supprimer un devis
+    function deleteDevis(devisId, devisNumero) {
+        devisToDelete = devisId;
+        document.getElementById('devisNumeroToDelete').textContent = devisNumero;
+        
+        // Créer et afficher la modal de manière robuste
+        const modalElement = document.getElementById('deleteModal');
+        let modalInstance = bootstrap.Modal.getInstance(modalElement);
+        
+        if (!modalInstance) {
+            modalInstance = new bootstrap.Modal(modalElement);
+        }
+        
+        modalInstance.show();
+    }
+    
+    // Fonction pour fermer la modal de suppression
+    function closeDeleteModal() {
+        const modalElement = document.getElementById('deleteModal');
+        let modalInstance = bootstrap.Modal.getInstance(modalElement);
+        
+        if (modalInstance) {
+            modalInstance.hide();
+        } else {
+            // Fallback avec jQuery si disponible
+            if (typeof $ !== 'undefined') {
+                $(modalElement).modal('hide');
+            } else {
+                // Fallback manuel
+                modalElement.classList.remove('show');
+                modalElement.style.display = 'none';
+                document.body.classList.remove('modal-open');
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) {
+                    backdrop.remove();
+                }
+            }
+        }
+    }
+    
+    // Confirmation de suppression
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+        if (devisToDelete) {
+            // Désactiver le bouton pendant la suppression
+            const confirmBtn = this;
+            const originalText = confirmBtn.innerHTML;
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Suppression...';
+            
+            fetch(`{% url 'devis:devis_delete_ajax' pk=0 %}`.replace('0', devisToDelete), {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Supprimer la ligne du tableau
+                    const rowToDelete = document.querySelector(`[data-devis-id="${devisToDelete}"]`);
+                    if (rowToDelete) {
+                        rowToDelete.closest('tr').remove();
+                    }
+                    
+                    // Afficher le message de succès
+                    showMessage('success', data.message);
+                    
+                    // Fermer la modal de manière robuste
+                    closeDeleteModal();
+                    
+                    // Mettre à jour le compteur total
+                    updateTotalCount();
+                    
+                } else {
+                    showMessage('error', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Erreur lors de la suppression:', error);
+                showMessage('error', 'Erreur lors de la suppression du devis.');
+            })
+            .finally(() => {
+                // Réactiver le bouton
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = originalText;
+            });
+        }
+    });
+    
+    // Fonction pour mettre à jour le compteur total
+    function updateTotalCount() {
+        const totalRows = document.querySelectorAll('tbody tr').length;
+        const totalBadge = document.querySelector('.badge.bg-primary');
+        if (totalBadge) {
+            totalBadge.textContent = totalRows;
+        }
+    }
+    
+    // Fonction pour afficher les messages
+    function showMessage(type, message) {
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        const icon = type === 'success' ? 'check-circle' : 'exclamation-circle';
+        
+        const alertHtml = `
+            <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                <i class="fas fa-${icon} me-2"></i>${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        
+        // Ajouter le message en haut de la page
+        const container = document.querySelector('.container-fluid');
+        container.insertAdjacentHTML('afterbegin', alertHtml);
+        
+        // Auto-fermer après 5 secondes
+        setTimeout(() => {
+            const alert = document.querySelector('.alert');
+            if (alert) {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }
+        }, 5000);
+    }
+    
+    // Fonction pour récupérer le cookie CSRF
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>
+{% endblock %} 

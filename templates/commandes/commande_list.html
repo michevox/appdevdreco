@@ -1,0 +1,567 @@
+{% extends 'base.html' %}
+{% load parametres_filters %}
+
+{% block title %}Gestion des Bons de Commande - {{ PARAMETRES_GLOBAUX.nom_application|default:"DEVDRECO SOFT" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête de la page -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0 text-dark">
+                        <i class="fas fa-shopping-cart me-2"></i>Gestion des Bons de Commande
+                    </h1>
+                    <p class="text-muted mb-0">Gérez vos commandes d'achat et de vente</p>
+                </div>
+                <div class="d-flex gap-2">
+                    {% if user|can_add_module:"commandes" %}
+                    <a href="{% url 'commandes:commande_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Nouveau Bon de Commande
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-2">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Total Commandes</h6>
+                            <h3 class="mb-0">{{ total_commandes }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-shopping-cart fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-secondary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Brouillons</h6>
+                            <h3 class="mb-0">{{ commandes_brouillon }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-edit fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">En cours</h6>
+                            <h3 class="mb-0">{{ commandes_en_cours }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Livrées</h6>
+                            <h3 class="mb-0">{{ commandes_livrees }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Ce mois</h6>
+                            <h3 class="mb-0">{{ commandes_ce_mois }}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-calendar fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card bg-danger text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="card-title">Total HT</h6>
+                            <h3 class="mb-0">{% if total_montant_ht %}{{ total_montant_ht|format_montant_simple }}{% else %}0 GNF{% endif %}</h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-money-bill fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulaire de recherche et filtres -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-search me-2"></i>Recherche et Filtres
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" id="searchForm">
+                        <div class="row">
+                            <div class="col-md-2">
+                                <label for="search_term" class="form-label">Recherche</label>
+                                <input type="text" class="form-control" id="search_term" name="q" value="{{ request.GET.q }}" placeholder="Numéro, objet...">
+                            </div>
+                            <div class="col-md-2">
+                                <label for="type_filter" class="form-label">Type</label>
+                                <select class="form-control" id="type_filter" name="type_commande">
+                                    <option value="">Tous</option>
+                                    <option value="achat" {% if request.GET.type_commande == 'achat' %}selected{% endif %}>Achat</option>
+                                    <option value="vente" {% if request.GET.type_commande == 'vente' %}selected{% endif %}>Vente</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="statut_filter" class="form-label">Statut</label>
+                                <select class="form-control" id="statut_filter" name="statut">
+                                    <option value="">Tous</option>
+                                    <option value="brouillon" {% if request.GET.statut == 'brouillon' %}selected{% endif %}>Brouillon</option>
+                                    <option value="envoye" {% if request.GET.statut == 'envoye' %}selected{% endif %}>Envoyé</option>
+                                    <option value="confirme" {% if request.GET.statut == 'confirme' %}selected{% endif %}>Confirmé</option>
+                                    <option value="en_cours" {% if request.GET.statut == 'en_cours' %}selected{% endif %}>En cours</option>
+                                    <option value="livre" {% if request.GET.statut == 'livre' %}selected{% endif %}>Livré</option>
+                                    <option value="annule" {% if request.GET.statut == 'annule' %}selected{% endif %}>Annulé</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="fournisseur_filter" class="form-label">Fournisseur</label>
+                                <select class="form-control" id="fournisseur_filter" name="fournisseur">
+                                    <option value="">Tous</option>
+                                    {% for fournisseur in fournisseurs %}
+                                    <option value="{{ fournisseur.id }}" {% if request.GET.fournisseur == fournisseur.id|stringformat:"s" %}selected{% endif %}>{{ fournisseur.nom }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="client_filter" class="form-label">Client</label>
+                                <select class="form-control" id="client_filter" name="client">
+                                    <option value="">Tous</option>
+                                    {% for client in clients %}
+                                    <option value="{{ client.id }}" {% if request.GET.client == client.id|stringformat:"s" %}selected{% endif %}>{{ client.nom_complet }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <label class="form-label">&nbsp;</label>
+                                        <button type="submit" class="btn btn-primary w-100">
+                                            <i class="fas fa-search me-2"></i>
+                                        </button>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label">&nbsp;</label>
+                                        <a href="{% url 'commandes:commande_list' %}" class="btn btn-outline-secondary w-100">
+                                            <i class="fas fa-times me-2"></i>Reset
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des commandes -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-list me-2"></i>Liste des Bons de Commande
+                            <span class="badge bg-primary ms-2">{{ total_commandes }}</span>
+                        </h5>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    {% if commande_list %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Commande</th>
+                                        <th>Type</th>
+                                        <th>Fournisseur/Client</th>
+                                        <th>Statut</th>
+                                        <th>Montants</th>
+                                        <th>Dates</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for commande in commande_list %}
+                                    <tr class="commande-row" data-commande-id="{{ commande.id }}">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-sm me-3">
+                                                    <div class="avatar-title rounded-circle bg-light text-primary">
+                                                        <i class="fas fa-shopping-cart"></i>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-0">{{ commande.numero }}</h6>
+                                                    <small class="text-muted">{{ commande.objet|truncatechars:50 }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if commande.type_commande == 'achat' %}
+                                                <span class="badge bg-info">Achat</span>
+                                            {% else %}
+                                                <span class="badge bg-success">Vente</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if commande.type_commande == 'achat' and commande.fournisseur %}
+                                                <div>
+                                                    <h6 class="mb-0">{{ commande.fournisseur.nom }}</h6>
+                                                    <small class="text-muted">{{ commande.fournisseur.telephone }}</small>
+                                                </div>
+                                            {% elif commande.type_commande == 'vente' and commande.client %}
+                                                <div>
+                                                    <h6 class="mb-0">{{ commande.client.nom_complet }}</h6>
+                                                    <small class="text-muted">{{ commande.client.get_type_display_short }}</small>
+                                                </div>
+                                            {% else %}
+                                                <span class="text-muted">Non défini</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if commande.statut == 'brouillon' %}
+                                                <span class="badge bg-secondary">Brouillon</span>
+                                            {% elif commande.statut == 'envoye' %}
+                                                <span class="badge bg-warning">Envoyé</span>
+                                            {% elif commande.statut == 'confirme' %}
+                                                <span class="badge bg-info">Confirmé</span>
+                                            {% elif commande.statut == 'en_cours' %}
+                                                <span class="badge bg-primary">En cours</span>
+                                            {% elif commande.statut == 'livre' %}
+                                                <span class="badge bg-success">Livré</span>
+                                            {% elif commande.statut == 'annule' %}
+                                                <span class="badge bg-danger">Annulé</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <div class="mb-1">
+                                                    <strong>HT: {% if commande.montant_ht %}{{ commande.montant_ht|format_montant_simple }}{% else %}0 GNF{% endif %}</strong>
+                                                </div>
+                                                <small class="text-muted">TTC: {% if commande.montant_ttc %}{{ commande.montant_ttc|format_montant_simple }}{% else %}0 GNF{% endif %}</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <div class="mb-1">Créé: {{ commande.date_creation|date:"d/m/Y" }}</div>
+                                                <small class="text-muted">Livraison: {{ commande.date_livraison_souhaitee|date:"d/m/Y" }}</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                {% if user|has_permission:"commandes.view" %}
+                                                <button type="button" class="btn btn-sm btn-outline-primary view-commande-btn" 
+                                                        data-commande-id="{{ commande.id }}" 
+                                                        title="Voir détails">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                {% endif %}
+                                                {% if user|can_change_module:"commandes" %}
+                                                <button type="button" class="btn btn-sm btn-outline-warning edit-commande-btn" 
+                                                        data-commande-id="{{ commande.id }}" 
+                                                        title="Modifier">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                {% endif %}
+                                                {% if user|has_permission:"commandes.print" %}
+                                                <a href="{% url 'commandes:commande_print' pk=commande.pk %}" class="btn btn-sm btn-outline-primary" target="_blank" title="Imprimer">
+                                                    <i class="fas fa-print"></i>
+                                                </a>
+                                                {% endif %}
+                                                {% if user|can_delete_module:"commandes" %}
+                                                <button type="button" class="btn btn-sm btn-outline-danger delete-commande-btn" 
+                                                        data-commande-id="{{ commande.id }}" 
+                                                        data-commande-numero="{{ commande.numero }}" 
+                                                        title="Supprimer">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Aucun bon de commande trouvé</h5>
+                            <p class="text-muted">Aucun bon de commande ne correspond à vos critères de recherche.</p>
+                            <a href="{% url 'commandes:commande_create' %}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Créer le premier bon de commande
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if commande_list.has_other_pages %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <nav aria-label="Pagination des commandes">
+                <ul class="pagination justify-content-center">
+                    {% if commande_list.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="fas fa-angle-double-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ commande_list.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="fas fa-angle-left"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+
+                    {% for num in commande_list.paginator.page_range %}
+                        {% if commande_list.number == num %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ num }}</span>
+                            </li>
+                        {% elif num > commande_list.number|add:'-3' and num < commande_list.number|add:'3' %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ num }}</a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if commande_list.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ commande_list.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="fas fa-angle-right"></i>
+                            </a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ commande_list.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                <i class="fas fa-angle-double-right"></i>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal de confirmation de suppression -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="fas fa-exclamation-triangle text-danger me-2"></i>Confirmation de suppression
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer le bon de commande <strong id="commandeNumeroToDelete"></strong> ?</p>
+                <p class="text-danger"><small>Cette action est irréversible.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fas fa-trash me-2"></i>Supprimer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Variables globales
+    let commandeToDelete = null;
+    
+    // Gestionnaire pour voir les détails d'une commande
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.view-commande-btn')) {
+            const btn = e.target.closest('.view-commande-btn');
+            const commandeId = btn.getAttribute('data-commande-id');
+            window.location.href = `{% url 'commandes:commande_detail' pk=0 %}`.replace('0', commandeId);
+        }
+        
+        // Gestionnaire pour éditer une commande
+        if (e.target.closest('.edit-commande-btn')) {
+            const btn = e.target.closest('.edit-commande-btn');
+            const commandeId = btn.getAttribute('data-commande-id');
+            window.location.href = `{% url 'commandes:commande_update' pk=0 %}`.replace('0', commandeId);
+        }
+        
+        
+        // Gestionnaire pour supprimer une commande
+        if (e.target.closest('.delete-commande-btn')) {
+            const btn = e.target.closest('.delete-commande-btn');
+            const commandeId = btn.getAttribute('data-commande-id');
+            const commandeNumero = btn.getAttribute('data-commande-numero');
+            deleteCommande(commandeId, commandeNumero);
+        }
+    });
+    
+    // Fonction pour supprimer une commande
+    function deleteCommande(commandeId, commandeNumero) {
+        commandeToDelete = commandeId;
+        document.getElementById('commandeNumeroToDelete').textContent = commandeNumero;
+        
+        // Créer et afficher la modal de manière robuste
+        const modalElement = document.getElementById('deleteModal');
+        let modalInstance = bootstrap.Modal.getInstance(modalElement);
+        
+        if (!modalInstance) {
+            modalInstance = new bootstrap.Modal(modalElement);
+        }
+        
+        modalInstance.show();
+    }
+    
+    // Confirmation de suppression
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+        if (commandeToDelete) {
+            // Désactiver le bouton pendant la suppression
+            const confirmBtn = this;
+            const originalText = confirmBtn.innerHTML;
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Suppression...';
+            
+            fetch(`{% url 'commandes:commande_delete' pk=0 %}`.replace('0', commandeToDelete), {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Supprimer la ligne du tableau
+                    const rowToDelete = document.querySelector(`[data-commande-id="${commandeToDelete}"]`);
+                    if (rowToDelete) {
+                        rowToDelete.closest('tr').remove();
+                    }
+                    
+                    // Afficher le message de succès
+                    showMessage('success', 'Bon de commande supprimé avec succès.');
+                    
+                    // Fermer la modal
+                    bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+                    
+                    // Mettre à jour le compteur total
+                    updateTotalCount();
+                } else {
+                    showMessage('error', 'Erreur lors de la suppression du bon de commande.');
+                }
+            })
+            .catch(error => {
+                console.error('Erreur lors de la suppression:', error);
+                showMessage('error', 'Erreur lors de la suppression du bon de commande.');
+            })
+            .finally(() => {
+                // Réactiver le bouton
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = originalText;
+            });
+        }
+    });
+    
+    // Fonction pour mettre à jour le compteur total
+    function updateTotalCount() {
+        const totalRows = document.querySelectorAll('tbody tr').length;
+        const totalBadge = document.querySelector('.badge.bg-primary');
+        if (totalBadge) {
+            totalBadge.textContent = totalRows;
+        }
+    }
+    
+    // Fonction pour afficher les messages
+    function showMessage(type, message) {
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        const icon = type === 'success' ? 'check-circle' : 'exclamation-circle';
+        
+        const alertHtml = `
+            <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                <i class="fas fa-${icon} me-2"></i>${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        
+        // Ajouter le message en haut de la page
+        const container = document.querySelector('.container-fluid');
+        container.insertAdjacentHTML('afterbegin', alertHtml);
+        
+        // Auto-fermer après 5 secondes
+        setTimeout(() => {
+            const alert = document.querySelector('.alert');
+            if (alert) {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }
+        }, 5000);
+    }
+    
+    // Fonction pour récupérer le cookie CSRF
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>
+{% endblock %}

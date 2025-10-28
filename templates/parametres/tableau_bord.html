@@ -1,0 +1,221 @@
+{% extends 'parametres/base_parametres.html' %}
+
+{% block parametres_content %}
+<div class="row">
+    <!-- Statistiques des utilisateurs -->
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Total Utilisateurs</h6>
+                        <h3 class="mb-0">{{ total_utilisateurs }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Utilisateurs Actifs</h6>
+                        <h3 class="mb-0">{{ utilisateurs_actifs }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-user-check fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Administrateurs</h6>
+                        <h3 class="mb-0">{{ administrateurs }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-user-shield fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">Utilisateurs Standard</h6>
+                        <h3 class="mb-0">{{ utilisateurs_standard }}</h3>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-user fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <!-- Configuration de l'application -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-cog me-2"></i>Configuration de l'application
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="me-3">
+                                {% if parametres_configures %}
+                                    <i class="fas fa-check-circle text-success fa-lg"></i>
+                                {% else %}
+                                    <i class="fas fa-times-circle text-danger fa-lg"></i>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Paramètres généraux</h6>
+                                <small class="text-muted">
+                                    {% if parametres_configures %}
+                                        Configurés
+                                    {% else %}
+                                        Non configurés
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-6">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="me-3">
+                                {% if societe_configuree %}
+                                    <i class="fas fa-check-circle text-success fa-lg"></i>
+                                {% else %}
+                                    <i class="fas fa-times-circle text-danger fa-lg"></i>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Informations société</h6>
+                                <small class="text-muted">
+                                    {% if societe_configuree %}
+                                        Configurées
+                                    {% else %}
+                                        Non configurées
+                                    {% endif %}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <a href="{% url 'parametres:parametres_generaux' %}" class="btn btn-primary btn-sm me-2">
+                        <i class="fas fa-cog me-1"></i>Configurer les paramètres
+                    </a>
+                    <a href="{% url 'parametres:informations_societe' %}" class="btn btn-info btn-sm">
+                        <i class="fas fa-building me-1"></i>Configurer la société
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Derniers utilisateurs créés -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-user-plus me-2"></i>Derniers utilisateurs créés
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if derniers_utilisateurs %}
+                    <div class="list-group list-group-flush">
+                        {% for utilisateur in derniers_utilisateurs %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0">{{ utilisateur.user.get_full_name|default:utilisateur.user.username }}</h6>
+                                <small class="text-muted">
+                                    {{ utilisateur.get_role_display }} • {{ utilisateur.user.email }}
+                                </small>
+                            </div>
+                            <div>
+                                {% if utilisateur.actif %}
+                                    <span class="badge bg-success">Actif</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactif</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-users fa-2x text-muted mb-2"></i>
+                        <p class="text-muted">Aucun utilisateur créé</p>
+                    </div>
+                {% endif %}
+                
+                <div class="mt-3">
+                    <a href="{% url 'parametres:utilisateur_list' %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-users me-1"></i>Gérer les utilisateurs
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <!-- Actions rapides -->
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-bolt me-2"></i>Actions rapides
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <a href="{% url 'parametres:utilisateur_create' %}" class="btn btn-success w-100 mb-2">
+                            <i class="fas fa-user-plus me-2"></i>Créer un utilisateur
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'parametres:parametres_generaux' %}" class="btn btn-primary w-100 mb-2">
+                            <i class="fas fa-sliders-h me-2"></i>Modifier les paramètres
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'parametres:informations_societe' %}" class="btn btn-info w-100 mb-2">
+                            <i class="fas fa-building me-2"></i>Modifier la société
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'admin:index' %}" class="btn btn-secondary w-100 mb-2">
+                            <i class="fas fa-tools me-2"></i>Administration Django
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

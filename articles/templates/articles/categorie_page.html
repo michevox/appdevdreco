@@ -1,0 +1,287 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestion des Catégories{% endblock %}
+
+{% block extra_css %}
+<style>
+    .categorie-form-card {
+        background: #f8f9fa;
+        border-left: 4px solid #28a745;
+    }
+    .stats-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    .search-filters {
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête de la page -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-tags text-primary me-2"></i>
+                        Gestion des Catégories
+                    </h2>
+                    <p class="text-muted mb-0">Gérez les catégories d'articles de votre entreprise</p>
+                </div>
+                <div class="btn-group" role="group">
+                    <a href="{% url 'articles:export_categories_excel' %}" class="btn btn-outline-success">
+                        <i class="fas fa-download me-1"></i>Exporter
+                    </a>
+                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#importModal">
+                        <i class="fas fa-upload me-1"></i>Importer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card stats-card">
+                <div class="card-body text-center">
+                    <i class="fas fa-tags fa-2x mb-2"></i>
+                    <h3>{{ active_categories_count|add:inactive_categories_count }}</h3>
+                    <p class="mb-0">Total Catégories</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-check-circle fa-2x mb-2"></i>
+                    <h3>{{ active_categories_count }}</h3>
+                    <p class="mb-0">Actives</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-pause-circle fa-2x mb-2"></i>
+                    <h3>{{ inactive_categories_count }}</h3>
+                    <p class="mb-0">Inactives</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulaire d'ajout de catégorie -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card categorie-form-card">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="fas fa-plus-circle text-success me-2"></i>
+                        Ajouter une nouvelle catégorie
+                    </h5>
+                    <form method="post" id="categorieForm">
+                        {% csrf_token %}
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-8">
+                                <label class="form-label">Libellé de la catégorie</label>
+                                {{ form.libelle }}
+                                {% if form.libelle.errors %}
+                                <div class="invalid-feedback d-block">{{ form.libelle.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="fas fa-save me-1"></i>Ajouter la catégorie
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zone de recherche et filtres -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card search-filters">
+                <div class="card-body">
+                    <form method="get" id="searchForm">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-4">
+                                <label class="form-label">Rechercher</label>
+                                <input type="text" class="form-control" name="search" 
+                                       value="{{ search_query }}" placeholder="Nom de la catégorie...">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Statut</label>
+                                <select class="form-select" name="status">
+                                    <option value="all" {% if status_filter == 'all' %}selected{% endif %}>Toutes</option>
+                                    <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Actives</option>
+                                    <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactives</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Trier par</label>
+                                <select class="form-select" name="sort">
+                                    <option value="libelle" {% if sort_by == 'libelle' %}selected{% endif %}>Nom</option>
+                                    <option value="date_creation" {% if sort_by == 'date_creation' %}selected{% endif %}>Date création</option>
+                                    <option value="date_modification" {% if sort_by == 'date_modification' %}selected{% endif %}>Date modification</option>
+                                    <option value="actif" {% if sort_by == 'actif' %}selected{% endif %}>Statut</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-search me-1"></i>Filtrer
+                                    </button>
+                                    <a href="{% url 'articles:categorie_list' %}" class="btn btn-outline-secondary btn-sm">
+                                        <i class="fas fa-times me-1"></i>Effacer
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des catégories -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        Liste des Catégories
+                        <span class="badge bg-primary ms-2">{{ paginator.count }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if categories %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Statut</th>
+                                        <th>Date de création</th>
+                                        <th>Dernière modification</th>
+                                        <th class="text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for categorie in categories %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ categorie.libelle }}</strong>
+                                        </td>
+                                        <td>
+                                            {% if categorie.actif %}
+                                                <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">Inactive</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ categorie.date_creation|date:"d/m/Y H:i" }}</td>
+                                        <td>{{ categorie.date_modification|date:"d/m/Y H:i" }}</td>
+                                        <td class="text-center">
+                                            <div class="btn-group" role="group">
+                                                <button type="button" class="btn btn-outline-primary btn-sm" 
+                                                        onclick="editCategorie({{ categorie.id }})">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-danger btn-sm" 
+                                                        onclick="deleteCategorie({{ categorie.id }})">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if page_obj.has_other_pages %}
+                        <nav aria-label="Pagination des catégories">
+                            <ul class="pagination justify-content-center">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if sort_by != 'libelle' %}&sort={{ sort_by }}{% endif %}">Première</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if sort_by != 'libelle' %}&sort={{ sort_by }}{% endif %}">Précédente</a>
+                                    </li>
+                                {% endif %}
+
+                                <li class="page-item active">
+                                    <span class="page-link">
+                                        Page {{ page_obj.number }} sur {{ page_obj.paginator.num_pages }}
+                                    </span>
+                                </li>
+
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if sort_by != 'libelle' %}&sort={{ sort_by }}{% endif %}">Suivante</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if sort_by != 'libelle' %}&sort={{ sort_by }}{% endif %}">Dernière</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-tags fa-3x text-muted mb-3"></i>
+                            <h4>Aucune catégorie trouvée</h4>
+                            <p class="text-muted">Commencez par créer votre première catégorie.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour l'import -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importModalLabel">Importer des catégories</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Fonctionnalité d'import en cours de développement.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function editCategorie(id) {
+    // Fonction pour éditer une catégorie
+    window.location.href = `/articles/categories/${id}/modifier/`;
+}
+
+function deleteCategorie(id) {
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette catégorie ?')) {
+        // Fonction pour supprimer une catégorie
+        window.location.href = `/articles/categories/${id}/supprimer/`;
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,269 @@
+{% extends 'base.html' %}
+{% load parametres_filters %}
+
+{% block title %}Contact et Support - {{ PARAMETRES_GLOBAUX.nom_application|default:"DEVDRECO SOFT" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête de la page -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0 text-dark">
+                        <i class="fas fa-headset me-2"></i>Contact et Support
+                    </h1>
+                    <p class="text-muted mb-0">Besoin d'aide ? Notre équipe est là pour vous accompagner</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'aide:index' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Retour à l'aide
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Informations de contact -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-phone me-2"></i>Nous contacter
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-phone text-primary me-3"></i>
+                                <div>
+                                    <strong>Téléphone</strong><br>
+                                    <a href="tel:+224626402000">+224 626 40 20 00</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-envelope text-primary me-3"></i>
+                                <div>
+                                    <strong>Email</strong><br>
+                                    <a href="mailto:support@devdreco.com">support@devdreco.com</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-map-marker-alt text-primary me-3"></i>
+                                <div>
+                                    <strong>Adresse</strong><br>
+                                    Conakry, République de Guinée
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-clock text-primary me-3"></i>
+                                <div>
+                                    <strong>Horaires de support</strong><br>
+                                    Lundi - Vendredi : 8h00 - 18h00<br>
+                                    Samedi : 9h00 - 13h00
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulaire de contact -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-paper-plane me-2"></i>Envoyer un message
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form id="contactForm">
+                        <div class="mb-3">
+                            <label for="nom" class="form-label">Nom complet *</label>
+                            <input type="text" class="form-control" id="nom" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email *</label>
+                            <input type="email" class="form-control" id="email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="telephone" class="form-label">Téléphone</label>
+                            <input type="tel" class="form-control" id="telephone">
+                        </div>
+                        <div class="mb-3">
+                            <label for="sujet" class="form-label">Sujet *</label>
+                            <select class="form-control" id="sujet" required>
+                                <option value="">Sélectionnez un sujet</option>
+                                <option value="probleme">Problème technique</option>
+                                <option value="question">Question sur l'utilisation</option>
+                                <option value="amelioration">Suggestion d'amélioration</option>
+                                <option value="formation">Demande de formation</option>
+                                <option value="autre">Autre</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Message *</label>
+                            <textarea class="form-control" id="message" rows="5" required placeholder="Décrivez votre demande en détail..."></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-2"></i>Envoyer le message
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informations supplémentaires -->
+        <div class="col-md-6">
+            <!-- Types de support -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-tools me-2"></i>Types de support
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <div class="d-flex">
+                                <i class="fas fa-wrench text-warning me-3 mt-1"></i>
+                                <div>
+                                    <h6>Support technique</h6>
+                                    <p class="mb-0">Résolution des problèmes techniques et bugs</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <div class="d-flex">
+                                <i class="fas fa-graduation-cap text-info me-3 mt-1"></i>
+                                <div>
+                                    <h6>Formation</h6>
+                                    <p class="mb-0">Formation à l'utilisation de l'application</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <div class="d-flex">
+                                <i class="fas fa-lightbulb text-success me-3 mt-1"></i>
+                                <div>
+                                    <h6>Conseil</h6>
+                                    <p class="mb-0">Conseils pour optimiser votre utilisation</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <div class="d-flex">
+                                <i class="fas fa-plus-circle text-primary me-3 mt-1"></i>
+                                <div>
+                                    <h6>Évolutions</h6>
+                                    <p class="mb-0">Demandes de nouvelles fonctionnalités</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Temps de réponse -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-stopwatch me-2"></i>Temps de réponse
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Urgent :</strong> Réponse sous 2 heures
+                            </div>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <div class="alert alert-warning">
+                                <i class="fas fa-clock me-2"></i>
+                                <strong>Normal :</strong> Réponse sous 24 heures
+                            </div>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Général :</strong> Réponse sous 48 heures
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conseils -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>Conseils pour un support efficace
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Décrivez précisément le problème rencontré
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Indiquez les étapes pour reproduire le problème
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Précisez votre navigateur et système d'exploitation
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Joignez des captures d'écran si nécessaire
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Vérifiez d'abord la FAQ avant de nous contacter
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('contactForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Récupérer les données du formulaire
+    const formData = {
+        nom: document.getElementById('nom').value,
+        email: document.getElementById('email').value,
+        telephone: document.getElementById('telephone').value,
+        sujet: document.getElementById('sujet').value,
+        message: document.getElementById('message').value
+    };
+    
+    // Validation côté client
+    if (!formData.nom || !formData.email || !formData.sujet || !formData.message) {
+        alert('Veuillez remplir tous les champs obligatoires.');
+        return;
+    }
+    
+    // Simulation d'envoi (à remplacer par un vrai envoi)
+    alert('Votre message a été envoyé avec succès ! Nous vous répondrons dans les plus brefs délais.');
+    
+    // Réinitialiser le formulaire
+    this.reset();
+});
+</script>
+{% endblock %}

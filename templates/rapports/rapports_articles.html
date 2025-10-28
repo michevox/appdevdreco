@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Rapports articles - DEVDRECO SOFT{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-box text-info me-2"></i>
+                        Rapports articles
+                    </h2>
+                    <p class="text-muted mb-0">Analysez vos stocks et performances produits</p>
+                </div>
+                <div>
+                    <a href="{% url 'rapports:dashboard' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Retour
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des rapports -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>Liste des rapports articles
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if rapports %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Type</th>
+                                        <th>Période</th>
+                                        <th>Format</th>
+                                        <th>Statut</th>
+                                        <th>Créé le</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for rapport in rapports %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-box text-info me-2"></i>
+                                                <strong>{{ rapport.nom }}</strong>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">
+                                                {{ rapport.get_type_rapport_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">
+                                                {% if rapport.periode_debut %}
+                                                    {{ rapport.periode_debut|date:"d/m/Y" }} - {{ rapport.periode_fin|date:"d/m/Y" }}
+                                                {% else %}
+                                                    Toutes périodes
+                                                {% endif %}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{% if rapport.format_sortie == 'pdf' %}danger{% elif rapport.format_sortie == 'excel' %}success{% else %}info{% endif %}">
+                                                <i class="fas fa-file-{% if rapport.format_sortie == 'pdf' %}pdf{% elif rapport.format_sortie == 'excel' %}excel{% else %}csv{% endif %} me-1"></i>
+                                                {{ rapport.get_format_sortie_display }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            {% if rapport.fichier_genere %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check me-1"></i>Généré
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-warning">
+                                                    <i class="fas fa-clock me-1"></i>En attente
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">
+                                                {{ rapport.date_creation|date:"d/m/Y H:i" }}
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                {% if rapport.fichier_genere %}
+                                                    <a href="{% url 'rapports:telecharger_rapport' 'articles' rapport.id %}" 
+                                                       class="btn btn-sm btn-outline-info" 
+                                                       title="Télécharger">
+                                                        <i class="fas fa-download"></i>
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-box fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Aucun rapport articles</h5>
+                            <p class="text-muted">Les rapports articles seront bientôt disponibles</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+

@@ -1,0 +1,449 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Modifier les Permissions - {{ user.get_full_name|default:user.username }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .permission-section {
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .permission-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px 20px;
+        font-weight: 600;
+        display: flex;
+        justify-content: between;
+        align-items: center;
+    }
+    
+    .permission-body {
+        padding: 20px;
+        background: white;
+    }
+    
+    .permission-item {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .permission-item:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border-color: #007bff;
+    }
+    
+    .permission-item.checked {
+        background: #e3f2fd;
+        border-color: #2196f3;
+    }
+    
+    .permission-checkbox {
+        transform: scale(1.2);
+        margin-right: 10px;
+    }
+    
+    .permission-title {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 5px;
+    }
+    
+    .permission-description {
+        color: #666;
+        font-size: 0.9em;
+        margin-bottom: 0;
+    }
+    
+    .user-info-card {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .user-avatar {
+        width: 60px;
+        height: 60px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        margin-right: 15px;
+    }
+    
+    .btn-save {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        padding: 12px 30px;
+        border-radius: 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    .select-all-section {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .permission-count {
+        background: #007bff;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.8em;
+        font-weight: 600;
+    }
+    
+    .module-icon {
+        width: 40px;
+        height: 40px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-key text-primary me-2"></i>
+                        Modifier les Permissions
+                    </h2>
+                    <p class="text-muted mb-0">Configurez les permissions pour cet utilisateur</p>
+                </div>
+                <div>
+                    <a href="{% url 'parametres:gestion_permissions' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        Retour
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informations utilisateur -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="user-info-card">
+                <div class="d-flex align-items-center">
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h4 class="mb-1">{{ user.get_full_name|default:user.username }}</h4>
+                        <p class="mb-1">{{ user.email }}</p>
+                        <div class="d-flex align-items-center">
+                            {% if profile.role %}
+                                <span class="badge bg-light text-dark me-2">
+                                    <i class="fas fa-user-tag me-1"></i>
+                                    {{ profile.role.nom }}
+                                </span>
+                            {% endif %}
+                            {% if profile.actif %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle me-1"></i>
+                                    Actif
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-times-circle me-1"></i>
+                                    Inactif
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulaire de permissions -->
+    <form method="post" id="permissionsForm">
+        {% csrf_token %}
+        
+        <!-- Sélection rapide -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="select-all-section">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h6 class="mb-2">
+                                <i class="fas fa-magic me-2"></i>
+                                Sélection rapide
+                            </h6>
+                            <p class="text-muted mb-0">Sélectionnez toutes les permissions d'un module en un clic</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <button type="button" class="btn btn-outline-primary btn-sm me-2" onclick="selectAll()">
+                                <i class="fas fa-check-double me-1"></i>
+                                Tout sélectionner
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="deselectAll()">
+                                <i class="fas fa-times me-1"></i>
+                                Tout désélectionner
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Permissions par module -->
+        <div class="row">
+            {% for module, permissions in permissions_par_module.items %}
+            <div class="col-12">
+                <div class="permission-section">
+                    <div class="permission-header">
+                        <div class="d-flex align-items-center">
+                            <div class="module-icon">
+                                {% if module == 'clients' %}
+                                    <i class="fas fa-users"></i>
+                                {% elif module == 'devis' %}
+                                    <i class="fas fa-file-invoice"></i>
+                                {% elif module == 'factures' %}
+                                    <i class="fas fa-receipt"></i>
+                                {% elif module == 'commandes' %}
+                                    <i class="fas fa-shopping-cart"></i>
+                                {% elif module == 'articles' %}
+                                    <i class="fas fa-box"></i>
+                                {% elif module == 'fournisseurs' %}
+                                    <i class="fas fa-truck"></i>
+                                {% elif module == 'rapports' %}
+                                    <i class="fas fa-chart-bar"></i>
+                                {% elif module == 'parametres' %}
+                                    <i class="fas fa-cog"></i>
+                                {% else %}
+                                    <i class="fas fa-folder"></i>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <h5 class="mb-0">{{ module|title }}</h5>
+                                <small>{{ permissions|length }} permission{{ permissions|length|pluralize }}</small>
+                            </div>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-sm btn-light" onclick="toggleModule('{{ module }}')">
+                                <i class="fas fa-check-square me-1"></i>
+                                Tout sélectionner
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="permission-body">
+                        <div class="row">
+                            {% for permission in permissions %}
+                            <div class="col-md-6 mb-3">
+                                <div class="permission-item {% if permission.code in permissions_actuelles %}checked{% endif %}" 
+                                     data-module="{{ module }}">
+                                    <div class="form-check">
+                                        <input class="form-check-input permission-checkbox" 
+                                               type="checkbox" 
+                                               name="permissions" 
+                                               value="{{ permission.code }}"
+                                               id="permission_{{ permission.code }}"
+                                               {% if permission.code in permissions_actuelles %}checked{% endif %}>
+                                        <label class="form-check-label w-100" for="permission_{{ permission.code }}">
+                                            <div class="permission-title">
+                                                {{ permission.nom }}
+                                                <span class="permission-count">{{ permission.code }}</span>
+                                            </div>
+                                            <div class="permission-description">
+                                                {{ permission.description }}
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Boutons d'action -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Les permissions sélectionnées seront accordées à cet utilisateur en plus de celles de son rôle.
+                        </small>
+                    </div>
+                    <div>
+                        <a href="{% url 'parametres:gestion_permissions' %}" class="btn btn-outline-secondary me-2">
+                            <i class="fas fa-times me-1"></i>
+                            Annuler
+                        </a>
+                        <button type="submit" class="btn btn-save">
+                            <i class="fas fa-save me-1"></i>
+                            Sauvegarder les Permissions
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Mettre à jour l'apparence des éléments cochés
+    const checkboxes = document.querySelectorAll('.permission-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const item = this.closest('.permission-item');
+            if (this.checked) {
+                item.classList.add('checked');
+            } else {
+                item.classList.remove('checked');
+            }
+        });
+    });
+});
+
+function selectAll() {
+    const checkboxes = document.querySelectorAll('.permission-checkbox');
+    const totalCount = checkboxes.length;
+    
+    if (totalCount === 0) {
+        alert('Aucune permission disponible à sélectionner.');
+        return;
+    }
+    
+    if (confirm(`Voulez-vous sélectionner toutes les ${totalCount} permissions ?`)) {
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = true;
+            checkbox.closest('.permission-item').classList.add('checked');
+            // Déclencher l'événement change pour mettre à jour l'interface
+            checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+        
+        // Afficher un message de confirmation
+        showMessage(`Toutes les ${totalCount} permissions ont été sélectionnées.`, 'success');
+    }
+}
+
+function deselectAll() {
+    const checkboxes = document.querySelectorAll('.permission-checkbox');
+    const checkedCount = document.querySelectorAll('.permission-checkbox:checked').length;
+    
+    if (checkedCount === 0) {
+        alert('Aucune permission n\'est actuellement sélectionnée.');
+        return;
+    }
+    
+    if (confirm(`Voulez-vous désélectionner toutes les ${checkedCount} permissions sélectionnées ?`)) {
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = false;
+            checkbox.closest('.permission-item').classList.remove('checked');
+            // Déclencher l'événement change pour mettre à jour l'interface
+            checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+        
+        // Afficher un message de confirmation
+        showMessage(`Toutes les permissions ont été désélectionnées.`, 'info');
+    }
+}
+
+function toggleModule(module) {
+    const moduleItems = document.querySelectorAll(`[data-module="${module}"]`);
+    const checkboxes = Array.from(moduleItems).map(item => item.querySelector('.permission-checkbox'));
+    
+    if (checkboxes.length === 0) {
+        alert('Aucune permission trouvée pour ce module.');
+        return;
+    }
+    
+    // Vérifier si tous sont cochés
+    const allChecked = checkboxes.every(checkbox => checkbox.checked);
+    const action = allChecked ? 'désélectionner' : 'sélectionner';
+    
+    if (confirm(`Voulez-vous ${action} toutes les permissions du module ${module} ?`)) {
+        // Basculer l'état
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = !allChecked;
+            const item = checkbox.closest('.permission-item');
+            if (checkbox.checked) {
+                item.classList.add('checked');
+            } else {
+                item.classList.remove('checked');
+            }
+            // Déclencher l'événement change pour mettre à jour l'interface
+            checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+        
+        // Afficher un message de confirmation
+        const message = allChecked ? 
+            `Toutes les permissions du module ${module} ont été désélectionnées.` :
+            `Toutes les permissions du module ${module} ont été sélectionnées.`;
+        showMessage(message, 'success');
+    }
+}
+
+// Fonction pour afficher des messages
+function showMessage(message, type = 'info') {
+    // Créer l'élément de message
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    messageDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    messageDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    // Ajouter au body
+    document.body.appendChild(messageDiv);
+    
+    // Supprimer automatiquement après 3 secondes
+    setTimeout(() => {
+        if (messageDiv.parentNode) {
+            messageDiv.remove();
+        }
+    }, 3000);
+}
+
+// Confirmation avant soumission
+document.getElementById('permissionsForm').addEventListener('submit', function(e) {
+    const checkedPermissions = document.querySelectorAll('.permission-checkbox:checked');
+    if (checkedPermissions.length === 0) {
+        if (!confirm('Aucune permission n\'est sélectionnée. Voulez-vous continuer ?')) {
+            e.preventDefault();
+        }
+    }
+});
+</script>
+{% endblock %}

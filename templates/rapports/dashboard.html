@@ -1,0 +1,279 @@
+{% extends 'base.html' %}
+{% load parametres_filters %}
+{% load static %}
+
+{% block title %}Rapports - DEVDRECO SOFT{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-chart-bar text-primary me-2"></i>
+                        Tableau de bord des rapports
+                    </h2>
+                    <p class="text-muted mb-0">Générez et consultez vos rapports d'activité</p>
+                </div>
+                <div>
+                    <a href="{% url 'rapports:creer_rapport_ventes' %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>Nouveau rapport
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques rapides -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Devis ce mois
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.devis_ce_mois }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-file-invoice fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Chiffre d'affaires
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.ca_mois|format_montant:0 }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Clients actifs
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.clients_actifs }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-3">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Articles actifs
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.articles_actifs }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-box fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Types de rapports -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h4 class="mb-3">Types de rapports disponibles</h4>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
+                    <h5 class="card-title">Rapports de ventes</h5>
+                    <p class="card-text">Analysez vos ventes par période, client ou produit</p>
+                    <a href="{% url 'rapports:rapports_ventes' %}" class="btn btn-primary">
+                        <i class="fas fa-eye me-1"></i>Consulter
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-users fa-3x text-success mb-3"></i>
+                    <h5 class="card-title">Rapports clients</h5>
+                    <p class="card-text">Analysez votre base de clients et leur comportement</p>
+                    <a href="{% url 'rapports:rapports_clients' %}" class="btn btn-success">
+                        <i class="fas fa-eye me-1"></i>Consulter
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-box fa-3x text-info mb-3"></i>
+                    <h5 class="card-title">Rapports articles</h5>
+                    <p class="card-text">Analysez vos stocks et performances produits</p>
+                    <a href="{% url 'rapports:rapports_articles' %}" class="btn btn-info">
+                        <i class="fas fa-eye me-1"></i>Consulter
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-calculator fa-3x text-warning mb-3"></i>
+                    <h5 class="card-title">Rapports financiers</h5>
+                    <p class="card-text">Analysez votre situation financière globale</p>
+                    <a href="{% url 'rapports:rapports_financiers' %}" class="btn btn-warning">
+                        <i class="fas fa-eye me-1"></i>Consulter
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rapports récents -->
+    <div class="row">
+        <div class="col-12">
+            <h4 class="mb-3">Rapports récents</h4>
+            <div class="card">
+                <div class="card-body">
+                    {% if rapports_ventes or rapports_clients or rapports_articles or rapports_financiers %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Nom</th>
+                                        <th>Type</th>
+                                        <th>Période</th>
+                                        <th>Format</th>
+                                        <th>Créé le</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for rapport in rapports_ventes %}
+                                    <tr>
+                                        <td>{{ rapport.nom }}</td>
+                                        <td><span class="badge bg-primary">Ventes</span></td>
+                                        <td>{{ rapport.date_debut|date:"d/m/Y" }} - {{ rapport.date_fin|date:"d/m/Y" }}</td>
+                                        <td><span class="badge bg-secondary">{{ rapport.get_format_sortie_display }}</span></td>
+                                        <td>{{ rapport.date_creation|date:"d/m/Y H:i" }}</td>
+                                        <td>
+                                            {% if rapport.fichier_genere %}
+                                                <a href="{% url 'rapports:telecharger_rapport' 'ventes' rapport.id %}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-download"></i>
+                                                </a>
+                                            {% else %}
+                                                <span class="text-muted">Non généré</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                    
+                                    {% for rapport in rapports_clients %}
+                                    <tr>
+                                        <td>{{ rapport.nom }}</td>
+                                        <td><span class="badge bg-success">Clients</span></td>
+                                        <td>{% if rapport.periode_debut %}{{ rapport.periode_debut|date:"d/m/Y" }} - {{ rapport.periode_fin|date:"d/m/Y" }}{% else %}Toutes périodes{% endif %}</td>
+                                        <td><span class="badge bg-secondary">{{ rapport.get_format_sortie_display }}</span></td>
+                                        <td>{{ rapport.date_creation|date:"d/m/Y H:i" }}</td>
+                                        <td>
+                                            {% if rapport.fichier_genere %}
+                                                <a href="{% url 'rapports:telecharger_rapport' 'clients' rapport.id %}" class="btn btn-sm btn-outline-success">
+                                                    <i class="fas fa-download"></i>
+                                                </a>
+                                            {% else %}
+                                                <span class="text-muted">Non généré</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                    
+                                    {% for rapport in rapports_articles %}
+                                    <tr>
+                                        <td>{{ rapport.nom }}</td>
+                                        <td><span class="badge bg-info">Articles</span></td>
+                                        <td>{% if rapport.periode_debut %}{{ rapport.periode_debut|date:"d/m/Y" }} - {{ rapport.periode_fin|date:"d/m/Y" }}{% else %}Toutes périodes{% endif %}</td>
+                                        <td><span class="badge bg-secondary">{{ rapport.get_format_sortie_display }}</span></td>
+                                        <td>{{ rapport.date_creation|date:"d/m/Y H:i" }}</td>
+                                        <td>
+                                            {% if rapport.fichier_genere %}
+                                                <a href="{% url 'rapports:telecharger_rapport' 'articles' rapport.id %}" class="btn btn-sm btn-outline-info">
+                                                    <i class="fas fa-download"></i>
+                                                </a>
+                                            {% else %}
+                                                <span class="text-muted">Non généré</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                    
+                                    {% for rapport in rapports_financiers %}
+                                    <tr>
+                                        <td>{{ rapport.nom }}</td>
+                                        <td><span class="badge bg-warning">Financier</span></td>
+                                        <td>{{ rapport.date_debut|date:"d/m/Y" }} - {{ rapport.date_fin|date:"d/m/Y" }}</td>
+                                        <td><span class="badge bg-secondary">{{ rapport.get_format_sortie_display }}</span></td>
+                                        <td>{{ rapport.date_creation|date:"d/m/Y H:i" }}</td>
+                                        <td>
+                                            {% if rapport.fichier_genere %}
+                                                <a href="{% url 'rapports:telecharger_rapport' 'financiers' rapport.id %}" class="btn btn-sm btn-outline-warning">
+                                                    <i class="fas fa-download"></i>
+                                                </a>
+                                            {% else %}
+                                                <span class="text-muted">Non généré</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">Aucun rapport généré</h5>
+                            <p class="text-muted">Commencez par créer votre premier rapport</p>
+                            <a href="{% url 'rapports:creer_rapport_ventes' %}" class="btn btn-primary">
+                                <i class="fas fa-plus me-1"></i>Créer un rapport
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+

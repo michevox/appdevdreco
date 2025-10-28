@@ -1,0 +1,189 @@
+{% load static %}
+<form method="post" id="clientForm" action="{% if client %}{% url 'clients:client_update' pk=client.pk %}{% else %}{% url 'clients:client_create' %}{% endif %}">
+    {% csrf_token %}
+    
+    <div class="row">
+        <!-- Informations de base -->
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="{{ form.nom_complet.id_for_label }}" class="form-label">
+                    <i class="fas fa-user me-1"></i>{{ form.nom_complet.label }}
+                </label>
+                {{ form.nom_complet }}
+                {% if form.nom_complet.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.nom_complet.errors.0 }}
+                    </div>
+                {% endif %}
+                {% if form.nom_complet.help_text %}
+                    <div class="form-text">{{ form.nom_complet.help_text }}</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="{{ form.type_client.id_for_label }}" class="form-label">
+                    <i class="fas fa-tag me-1"></i>{{ form.type_client.label }}
+                </label>
+                {{ form.type_client }}
+                {% if form.type_client.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.type_client.errors.0 }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Coordonnées -->
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label class="form-label">
+                    <i class="fas fa-phone me-1"></i>{{ form.telephone.label }}
+                </label>
+                <div class="input-group">
+                    <span class="input-group-text p-0" style="border: none; background: transparent;">
+                        {{ form.phone_country_code }}
+                    </span>
+                    {{ form.phone_number }}
+                </div>
+                {{ form.telephone }}
+                {% if form.phone_number.errors %}
+                    <div class="invalid-feedback d-block">{{ form.phone_number.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="{{ form.email.id_for_label }}" class="form-label">
+                    <i class="fas fa-envelope me-1"></i>{{ form.email.label }}
+                </label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.email.errors.0 }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Adresse -->
+        <div class="col-12">
+            <div class="mb-3">
+                <label for="{{ form.adresse.id_for_label }}" class="form-label">
+                    <i class="fas fa-map-marker-alt me-1"></i>{{ form.adresse.label }}
+                </label>
+                {{ form.adresse }}
+                {% if form.adresse.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.adresse.errors.0 }}
+                    </div>
+                {% endif %}
+                {% if form.adresse.help_text %}
+                    <div class="form-text">{{ form.adresse.help_text }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Statut -->
+        <div class="col-12">
+            <div class="mb-3">
+                <div class="form-check">
+                    {{ form.actif }}
+                    <label class="form-check-label" for="{{ form.actif.id_for_label }}">
+                        <i class="fas fa-check-circle me-1"></i>{{ form.actif.label }}
+                    </label>
+                </div>
+                {% if form.actif.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.actif.errors.0 }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Informations supplémentaires (si en mode édition) -->
+    {% if client %}
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h6 class="alert-heading">
+                    <i class="fas fa-info-circle me-2"></i>Informations du client
+                </h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <small class="text-muted">
+                            <strong>Date de création:</strong><br>
+                            {{ client.date_creation|date:"d/m/Y à H:i" }}
+                        </small>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted">
+                            <strong>Dernière modification:</strong><br>
+                            {{ client.date_modification|date:"d/m/Y à H:i" }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Boutons d'action -->
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>Annuler
+        </button>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-2"></i>
+            {% if client %}Modifier{% else %}Enregistrer{% endif %}
+        </button>
+    </div>
+</form>
+
+<script>
+// Validation en temps réel du formulaire
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('clientForm');
+    const inputs = form.querySelectorAll('input, select, textarea');
+    
+    // Supprimer les classes d'erreur lors de la saisie
+    inputs.forEach(input => {
+        input.addEventListener('input', function() {
+            this.classList.remove('is-invalid');
+            const feedback = this.parentNode.querySelector('.invalid-feedback');
+            if (feedback) {
+                feedback.remove();
+            }
+        });
+    });
+    
+    // Pas de validation de format pour le téléphone - accepter n'importe quel format
+    
+    // Validation de l'email en temps réel
+    const emailInput = document.getElementById('{{ form.email.id_for_label }}');
+    if (emailInput) {
+        emailInput.addEventListener('blur', function() {
+            const value = this.value.trim();
+            if (value) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(value)) {
+                    this.classList.add('is-invalid');
+                    const feedback = this.parentNode.querySelector('.invalid-feedback') || 
+                                   this.parentNode.appendChild(document.createElement('div'));
+                    feedback.className = 'invalid-feedback';
+                    feedback.textContent = 'Veuillez entrer une adresse email valide.';
+                }
+            }
+        });
+    }
+});
+</script>

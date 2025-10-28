@@ -1,0 +1,262 @@
+{% extends 'parametres/base_parametres.html' %}
+
+{% block parametres_content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-users me-2"></i>Gestion des utilisateurs
+                        </h5>
+                        <p class="text-muted mb-0">Gérez les utilisateurs de l'application</p>
+                    </div>
+                    <div>
+                        <a href="{% url 'parametres:utilisateur_create' %}" class="btn btn-success">
+                            <i class="fas fa-user-plus me-2"></i>Nouvel utilisateur
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <!-- Filtres et recherche -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <form method="get" class="d-flex">
+                            <input type="text" name="search" class="form-control me-2" 
+                                   placeholder="Rechercher un utilisateur..." 
+                                   value="{{ search_query }}">
+                            <button type="submit" class="btn btn-outline-primary">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </form>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex gap-2 justify-content-end">
+                            <select name="role" class="form-select" style="width: auto;" onchange="this.form.submit()">
+                                <option value="">Tous les rôles</option>
+                                {% for role_value, role_label in role_choices %}
+                                    <option value="{{ role_value }}" {% if role_filter == role_value %}selected{% endif %}>
+                                        {{ role_label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <select name="statut" class="form-select" style="width: auto;" onchange="this.form.submit()">
+                                <option value="">Tous les statuts</option>
+                                <option value="actif" {% if statut_filter == 'actif' %}selected{% endif %}>Actifs</option>
+                                <option value="inactif" {% if statut_filter == 'inactif' %}selected{% endif %}>Inactifs</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Liste des utilisateurs -->
+                {% if utilisateurs %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Utilisateur</th>
+                                    <th>Rôle</th>
+                                    <th>Contact</th>
+                                    <th>Poste</th>
+                                    <th>Statut</th>
+                                    <th>Date création</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for utilisateur in utilisateurs %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm me-3">
+                                                <div class="avatar-title rounded-circle bg-light text-primary">
+                                                    <i class="fas fa-user"></i>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0">{{ utilisateur.user.get_full_name|default:utilisateur.user.username }}</h6>
+                                                <small class="text-muted">@{{ utilisateur.user.username }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if utilisateur.role == 'admin' %}
+                                            <span class="badge bg-warning">Administrateur</span>
+                                        {% else %}
+                                            <span class="badge bg-info">Standard</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div>
+                                            <div class="mb-1">{{ utilisateur.user.email }}</div>
+                                            {% if utilisateur.telephone %}
+                                                <small class="text-muted">{{ utilisateur.telephone }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div>
+                                            {% if utilisateur.poste %}
+                                                <div class="mb-1">{{ utilisateur.poste }}</div>
+                                            {% endif %}
+                                            {% if utilisateur.departement %}
+                                                <small class="text-muted">{{ utilisateur.departement }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if utilisateur.actif %}
+                                            <span class="badge bg-success">Actif</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inactif</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ utilisateur.date_creation|date:"d/m/Y" }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'parametres:utilisateur_update' utilisateur.pk %}" 
+                                               class="btn btn-sm btn-outline-primary" title="Modifier">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'parametres:utilisateur_changer_mot_de_passe' utilisateur.pk %}" 
+                                               class="btn btn-sm btn-outline-warning" title="Changer mot de passe">
+                                                <i class="fas fa-key"></i>
+                                            </a>
+                                            <a href="{% url 'parametres:utilisateur_activer_desactiver' utilisateur.pk %}" 
+                                               class="btn btn-sm btn-outline-{% if utilisateur.actif %}danger{% else %}success{% endif %}" 
+                                               title="{% if utilisateur.actif %}Désactiver{% else %}Activer{% endif %}">
+                                                <i class="fas fa-{% if utilisateur.actif %}times{% else %}check{% endif %}"></i>
+                                            </a>
+                                            <a href="{% url 'parametres:utilisateur_delete' utilisateur.pk %}" 
+                                               class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if is_paginated %}
+                        <nav aria-label="Pagination des utilisateurs">
+                            <ul class="pagination justify-content-center">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if statut_filter %}&statut={{ statut_filter }}{% endif %}">
+                                            <i class="fas fa-angle-double-left"></i>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if statut_filter %}&statut={{ statut_filter }}{% endif %}">
+                                            <i class="fas fa-angle-left"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+
+                                {% for num in page_obj.paginator.page_range %}
+                                    {% if page_obj.number == num %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ num }}</span>
+                                        </li>
+                                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if statut_filter %}&statut={{ statut_filter }}{% endif %}">{{ num }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if statut_filter %}&statut={{ statut_filter }}{% endif %}">
+                                            <i class="fas fa-angle-right"></i>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if role_filter %}&role={{ role_filter }}{% endif %}{% if statut_filter %}&statut={{ statut_filter }}{% endif %}">
+                                            <i class="fas fa-angle-double-right"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    {% endif %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Aucun utilisateur trouvé</h5>
+                        <p class="text-muted">
+                            {% if search_query or role_filter or statut_filter %}
+                                Aucun utilisateur ne correspond à vos critères de recherche.
+                            {% else %}
+                                Aucun utilisateur n'a encore été créé.
+                            {% endif %}
+                        </p>
+                        <a href="{% url 'parametres:utilisateur_create' %}" class="btn btn-primary">
+                            <i class="fas fa-user-plus me-2"></i>Créer le premier utilisateur
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistiques rapides -->
+<div class="row">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-users fa-2x mb-2"></i>
+                <h4 class="mb-0">{{ page_obj.paginator.count }}</h4>
+                <small>Total utilisateurs</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-user-check fa-2x mb-2"></i>
+                <h4 class="mb-0">{{ utilisateurs_actifs|default:0 }}</h4>
+                <small>Utilisateurs actifs</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-user-shield fa-2x mb-2"></i>
+                <h4 class="mb-0">{{ administrateurs|default:0 }}</h4>
+                <small>Administrateurs</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <i class="fas fa-user fa-2x mb-2"></i>
+                <h4 class="mb-0">{{ utilisateurs_standard|default:0 }}</h4>
+                <small>Utilisateurs standard</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Soumettre automatiquement les filtres
+    document.querySelectorAll('select[name="role"], select[name="statut"]').forEach(select => {
+        select.addEventListener('change', function() {
+            this.form.submit();
+        });
+    });
+</script>
+{% endblock %}

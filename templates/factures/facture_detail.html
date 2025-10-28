@@ -1,0 +1,395 @@
+{% extends 'base.html' %}
+{% load parametres_filters %}
+
+{% block title %}Détails de la Facture - DEVDRECO SOFT{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête de la page -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0 text-dark">
+                        <i class="fas fa-file-invoice-dollar me-2"></i>Facture {{ facture.numero }}
+                    </h1>
+                    <p class="text-muted mb-0">{{ facture.objet }}</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'factures:facture_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Retour
+                    </a>
+                    <a href="{% url 'factures:facture_imprimer' pk=facture.pk %}" class="btn btn-primary" target="_blank">
+                        <i class="fas fa-print me-2"></i>Imprimer
+                    </a>
+                    <a href="{% url 'factures:facture_telecharger' pk=facture.pk %}" class="btn btn-outline-primary">
+                        <i class="fas fa-download me-2"></i>Télécharger
+                    </a>
+                    {% if user|can_change_module:"factures" %}
+                    <a href="{% url 'factures:facture_update' pk=facture.pk %}" class="btn btn-warning">
+                        <i class="fas fa-edit me-2"></i>Modifier
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Informations de la facture -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Informations de la facture
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Fournisseur :</strong> {{ facture.fournisseur.nom }}</p>
+                            <p><strong>Statut :</strong> 
+                                {% if facture.statut == 'brouillon' %}
+                                    <span class="badge bg-secondary">Brouillon</span>
+                                {% elif facture.statut == 'en_attente' %}
+                                    <span class="badge bg-warning">En attente</span>
+                                {% elif facture.statut == 'validee' %}
+                                    <span class="badge bg-info">Validée</span>
+                                {% elif facture.statut == 'payee' %}
+                                    <span class="badge bg-success">Payée</span>
+                                {% elif facture.statut == 'annulee' %}
+                                    <span class="badge bg-danger">Annulée</span>
+                                {% endif %}
+                            </p>
+                            <p><strong>Date d'émission :</strong> {{ facture.date_emission|date:"d/m/Y" }}</p>
+                            <p><strong>Date d'échéance :</strong> {{ facture.date_echeance|date:"d/m/Y" }}</p>
+                            <p><strong>Date de réception :</strong> {{ facture.date_reception|date:"d/m/Y" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Objet :</strong> {{ facture.objet }}</p>
+                            {% if facture.description %}
+                                <p><strong>Description :</strong> {{ facture.description }}</p>
+                            {% endif %}
+                            <p><strong>Taux TVA :</strong> {{ facture.taux_tva }}%</p>
+                            <p><strong>Date de création :</strong> {{ facture.date_creation|date:"d/m/Y" }} à {{ facture.date_creation|time:"H:i" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lignes de la facture -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>Lignes de la facture
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if facture.lignes.all %}
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Désignation</th>
+                                        <th>Quantité</th>
+                                        <th>Unités</th>
+                                        <th>Prix unitaire HT</th>
+                                        <th>Total HT</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for ligne in facture.lignes.all %}
+                                    <tr>
+                                        <td>{{ ligne.description }}</td>
+                                        <td>{{ ligne.quantite }}</td>
+                                        <td>{{ ligne.unite }}</td>
+                                        <td>{{ ligne.prix_unitaire_ht|format_montant }}</td>
+                                        <td>{{ ligne.montant_ht|format_montant }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-list fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Aucune ligne de facture enregistrée.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Conditions et notes -->
+            {% if facture.conditions_paiement or facture.notes %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-sticky-note me-2"></i>Conditions et notes
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if facture.conditions_paiement %}
+                        <div class="mb-3">
+                            <h6>Conditions de paiement :</h6>
+                            <p class="text-muted">{{ facture.conditions_paiement|linebreaks }}</p>
+                        </div>
+                    {% endif %}
+                    {% if facture.notes %}
+                        <div>
+                            <h6>Notes :</h6>
+                            <p class="text-muted">{{ facture.notes|linebreaks }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Résumé et actions -->
+        <div class="col-lg-4">
+            <!-- Résumé financier -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-calculator me-2"></i>Résumé financier
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Montant HT :</span>
+                        <strong>{{ facture.montant_ht|format_montant }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>TVA ({{ facture.taux_tva }}%) :</span>
+                        <strong>{{ facture.montant_tva|format_montant }}</strong>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <span><strong>Montant TTC :</strong></span>
+                        <strong class="text-success">{{ facture.montant_ttc|format_montant }}</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Informations du fournisseur -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-building me-2"></i>Fournisseur
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6>{{ facture.fournisseur.nom }}</h6>
+                    {% if facture.fournisseur.telephone %}
+                        <p class="mb-1">
+                            <i class="fas fa-phone me-2"></i>
+                            <a href="tel:{{ facture.fournisseur.telephone }}">{{ facture.fournisseur.telephone }}</a>
+                        </p>
+                    {% endif %}
+                    {% if facture.fournisseur.email %}
+                        <p class="mb-1">
+                            <i class="fas fa-envelope me-2"></i>
+                            <a href="mailto:{{ facture.fournisseur.email }}">{{ facture.fournisseur.email }}</a>
+                        </p>
+                    {% endif %}
+                    {% if facture.fournisseur.adresse %}
+                        <p class="mb-0">
+                            <i class="fas fa-map-marker-alt me-2"></i>
+                            {{ facture.fournisseur.adresse }}
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-cogs me-2"></i>Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if user|can_change_module:"factures" %}
+                            {% if facture.statut == 'brouillon' %}
+                                <button type="button" class="btn btn-info" onclick="changerStatut('valider')">
+                                    <i class="fas fa-check me-2"></i>Valider la facture
+                                </button>
+                            {% elif facture.statut == 'validee' %}
+                                <button type="button" class="btn btn-success" onclick="changerStatut('payer')">
+                                    <i class="fas fa-money-bill me-2"></i>Marquer comme payée
+                                </button>
+                            {% endif %}
+                            
+                            {% if facture.statut != 'annulee' %}
+                                <button type="button" class="btn btn-danger" onclick="changerStatut('annuler')">
+                                    <i class="fas fa-times me-2"></i>Annuler la facture
+                                </button>
+                            {% endif %}
+                        {% endif %}
+                        
+                        {% if user|can_delete_module:"factures" %}
+                            <button type="button" class="btn btn-outline-danger" onclick="supprimerFacture()">
+                                <i class="fas fa-trash me-2"></i>Supprimer
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Métadonnées -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info me-2"></i>Métadonnées
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <small class="text-muted">
+                        <p><strong>Créé le :</strong> {{ facture.date_creation|date:"d/m/Y" }} à {{ facture.date_creation|time:"H:i" }}</p>
+                        <p><strong>Modifié le :</strong> {{ facture.date_modification|date:"d/m/Y" }} à {{ facture.date_modification|time:"H:i" }}</p>
+                        <p><strong>ID :</strong> {{ facture.id }}</p>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmation de suppression -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="fas fa-exclamation-triangle text-danger me-2"></i>Confirmation de suppression
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer la facture <strong>{{ facture.numero }}</strong> ?</p>
+                <p class="text-danger"><small>Cette action est irréversible.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="fas fa-trash me-2"></i>Supprimer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Fonction pour changer le statut de la facture
+function changerStatut(action) {
+    const actionText = {
+        'valider': 'valider',
+        'payer': 'marquer comme payée',
+        'annuler': 'annuler'
+    };
+    
+    if (confirm(`Êtes-vous sûr de vouloir ${actionText[action]} cette facture ?`)) {
+        fetch(`{% url 'factures:facture_toggle_status' pk=facture.pk %}`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `action=${action}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage('success', data.message);
+                // Recharger la page pour mettre à jour l'affichage
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showMessage('error', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            showMessage('error', 'Erreur lors du changement de statut.');
+        });
+    }
+}
+
+// Fonction pour supprimer la facture
+function supprimerFacture() {
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+
+// Confirmation de suppression
+document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+    fetch(`{% url 'factures:facture_delete_ajax' pk=facture.pk %}`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage('success', data.message);
+            // Rediriger vers la liste après 2 secondes
+            setTimeout(() => {
+                window.location.href = '{% url "factures:facture_list" %}';
+            }, 2000);
+        } else {
+            showMessage('error', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Erreur lors de la suppression:', error);
+        showMessage('error', 'Erreur lors de la suppression de la facture.');
+    });
+});
+
+// Fonction pour afficher les messages
+function showMessage(type, message) {
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+    const icon = type === 'success' ? 'check-circle' : 'exclamation-circle';
+    
+    const alertHtml = `
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+            <i class="fas fa-${icon} me-2"></i>${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    
+    // Ajouter le message en haut de la page
+    const container = document.querySelector('.container-fluid');
+    container.insertAdjacentHTML('afterbegin', alertHtml);
+    
+    // Auto-fermer après 5 secondes
+    setTimeout(() => {
+        const alert = document.querySelector('.alert');
+        if (alert) {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        }
+    }, 5000);
+}
+
+// Fonction pour récupérer le cookie CSRF
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

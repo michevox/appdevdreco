@@ -1,0 +1,448 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestion des Permissions{% endblock %}
+
+{% block extra_css %}
+<style>
+    .permission-card {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .permission-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px 8px 0 0;
+        font-weight: 600;
+    }
+    
+    .permission-body {
+        padding: 20px;
+    }
+    
+    .user-card {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .user-card:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    
+    .user-header {
+        background: #f8f9fa;
+        padding: 15px 20px;
+        border-bottom: 1px solid #e9ecef;
+        border-radius: 8px 8px 0 0;
+    }
+    
+    .user-body {
+        padding: 15px 20px;
+    }
+    
+    .permission-badge {
+        display: inline-block;
+        padding: 4px 8px;
+        margin: 2px;
+        background: #e3f2fd;
+        color: #1976d2;
+        border-radius: 12px;
+        font-size: 0.8em;
+        border: 1px solid #bbdefb;
+    }
+    
+    .role-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85em;
+        font-weight: 500;
+    }
+    
+    .role-admin {
+        background: #ffebee;
+        color: #c62828;
+        border: 1px solid #ffcdd2;
+    }
+    
+    .role-manager {
+        background: #e8f5e8;
+        color: #2e7d32;
+        border: 1px solid #c8e6c9;
+    }
+    
+    .role-user {
+        background: #e3f2fd;
+        color: #1565c0;
+        border: 1px solid #bbdefb;
+    }
+    
+    .status-active {
+        color: #28a745;
+    }
+    
+    .status-inactive {
+        color: #dc3545;
+    }
+    
+    .btn-permission {
+        padding: 4px 8px;
+        font-size: 0.8em;
+        margin: 2px;
+    }
+    
+    .search-box {
+        background: white;
+        border: 2px solid #e9ecef;
+        border-radius: 25px;
+        padding: 10px 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .filter-tabs {
+        background: white;
+        border-radius: 10px;
+        padding: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="fas fa-shield-alt text-primary me-2"></i>
+                        Gestion des Permissions
+                    </h2>
+                    <p class="text-muted mb-0">Configurez les rôles et permissions des utilisateurs</p>
+                </div>
+                <div>
+                    <a href="{% url 'parametres:tableau_bord' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        Retour
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres et recherche -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="filter-tabs">
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <div class="search-box">
+                            <i class="fas fa-search text-muted me-2"></i>
+                            <input type="text" id="searchUsers" class="border-0 bg-transparent w-100" 
+                                   placeholder="Rechercher un utilisateur...">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <select id="filterRole" class="form-select">
+                            <option value="">Tous les rôles</option>
+                            <option value="admin">Administrateurs</option>
+                            <option value="manager">Managers</option>
+                            <option value="user">Utilisateurs standard</option>
+                            <option value="readonly">Lecture seule</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select id="filterStatus" class="form-select">
+                            <option value="">Tous les statuts</option>
+                            <option value="active">Actifs</option>
+                            <option value="inactive">Inactifs</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-primary w-100" onclick="resetFilters()">
+                            <i class="fas fa-refresh me-1"></i>
+                            Réinitialiser
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0">{{ utilisateurs|length }}</h4>
+                            <p class="mb-0">Total utilisateurs</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0" id="activeUsers">{{ utilisateurs|length }}</h4>
+                            <p class="mb-0">Utilisateurs actifs</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-user-check fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0" id="adminUsers">0</h4>
+                            <p class="mb-0">Administrateurs</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-crown fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="mb-0" id="totalPermissions">{{ permissions_par_module|length }}</h4>
+                            <p class="mb-0">Modules disponibles</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-shield-alt fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des utilisateurs -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        Utilisateurs et leurs Permissions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="usersList">
+                        {% for user in utilisateurs %}
+                            {% with profile=user.user_profile %}
+                            <div class="user-card" data-role="{{ profile.role.nom|default:'aucun'|lower }}" 
+                                 data-status="{{ profile.actif|yesno:'active,inactive' }}" 
+                                 data-name="{{ user.get_full_name|default:user.username|lower }}">
+                                <div class="user-header">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-6">
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-circle me-3">
+                                                    <i class="fas fa-user"></i>
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-1">
+                                                        {{ user.get_full_name|default:user.username }}
+                                                        {% if profile.actif %}
+                                                            <span class="status-active">
+                                                                <i class="fas fa-check-circle"></i>
+                                                            </span>
+                                                        {% else %}
+                                                            <span class="status-inactive">
+                                                                <i class="fas fa-times-circle"></i>
+                                                            </span>
+                                                        {% endif %}
+                                                    </h6>
+                                                    <small class="text-muted">{{ user.email }}</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 text-end">
+                                            <div class="d-flex justify-content-end align-items-center">
+                                                {% if profile.role %}
+                                                    <span class="role-badge role-{{ profile.role.nom|lower }}">
+                                                        {{ profile.role.nom }}
+                                                    </span>
+                                                {% else %}
+                                                    <span class="role-badge role-user">
+                                                        Aucun rôle
+                                                    </span>
+                                                {% endif %}
+                                                
+                                                <div class="btn-group ms-3" role="group">
+                                                    <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" 
+                                                            data-bs-toggle="dropdown">
+                                                        <i class="fas fa-cog"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li>
+                                                            <a class="dropdown-item" href="{% url 'parametres:modifier_permissions_utilisateur' user.id %}">
+                                                                <i class="fas fa-key me-2"></i>
+                                                                Modifier permissions
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item" href="{% url 'parametres:modifier_role_utilisateur' user.id %}">
+                                                                <i class="fas fa-user-tag me-2"></i>
+                                                                Modifier rôle
+                                                            </a>
+                                                        </li>
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        <li>
+                                                            <a class="dropdown-item" href="{% url 'parametres:activer_desactiver_utilisateur' user.id %}">
+                                                                {% if profile.actif %}
+                                                                    <i class="fas fa-user-times me-2"></i>
+                                                                    Désactiver
+                                                                {% else %}
+                                                                    <i class="fas fa-user-check me-2"></i>
+                                                                    Activer
+                                                                {% endif %}
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="user-body">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                            <h6 class="mb-2">Permissions accordées :</h6>
+                                            <div class="permissions-list">
+                                                {% for permission in profile.get_permissions %}
+                                                    <span class="permission-badge">
+                                                        {{ permission.permission.nom }}
+                                                    </span>
+                                                {% empty %}
+                                                    <span class="text-muted">Aucune permission spécifique</span>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <h6 class="mb-2">Informations :</h6>
+                                            <ul class="list-unstyled small">
+                                                <li>
+                                                    <i class="fas fa-calendar me-1"></i>
+                                                    Créé : {{ user.date_joined|date:"d/m/Y" }}
+                                                </li>
+                                                <li>
+                                                    <i class="fas fa-clock me-1"></i>
+                                                    Dernière connexion : 
+                                                    {% if profile.derniere_connexion %}
+                                                        {{ profile.derniere_connexion|date:"d/m/Y H:i" }}
+                                                    {% else %}
+                                                        Jamais
+                                                    {% endif %}
+                                                </li>
+                                                <li>
+                                                    <i class="fas fa-sign-in-alt me-1"></i>
+                                                    Connexions : {{ profile.nombre_connexions }}
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endwith %}
+                        {% empty %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">Aucun utilisateur trouvé</h5>
+                                <p class="text-muted">Commencez par créer des utilisateurs dans la section utilisateurs.</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Filtrage en temps réel
+    const searchInput = document.getElementById('searchUsers');
+    const roleFilter = document.getElementById('filterRole');
+    const statusFilter = document.getElementById('filterStatus');
+    const userCards = document.querySelectorAll('.user-card');
+    
+    function filterUsers() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const selectedRole = roleFilter.value;
+        const selectedStatus = statusFilter.value;
+        
+        let visibleCount = 0;
+        let activeCount = 0;
+        let adminCount = 0;
+        
+        userCards.forEach(card => {
+            const userName = card.dataset.name;
+            const userRole = card.dataset.role;
+            const userStatus = card.dataset.status;
+            
+            const matchesSearch = userName.includes(searchTerm);
+            const matchesRole = !selectedRole || userRole === selectedRole;
+            const matchesStatus = !selectedStatus || userStatus === selectedStatus;
+            
+            if (matchesSearch && matchesRole && matchesStatus) {
+                card.style.display = 'block';
+                visibleCount++;
+                if (userStatus === 'active') activeCount++;
+                if (userRole === 'administrateur') adminCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        // Mettre à jour les statistiques
+        document.getElementById('activeUsers').textContent = activeCount;
+        document.getElementById('adminUsers').textContent = adminCount;
+    }
+    
+    searchInput.addEventListener('input', filterUsers);
+    roleFilter.addEventListener('change', filterUsers);
+    statusFilter.addEventListener('change', filterUsers);
+    
+    // Initialiser les statistiques
+    filterUsers();
+});
+
+function resetFilters() {
+    document.getElementById('searchUsers').value = '';
+    document.getElementById('filterRole').value = '';
+    document.getElementById('filterStatus').value = '';
+    
+    // Déclencher le filtrage
+    document.getElementById('searchUsers').dispatchEvent(new Event('input'));
+}
+</script>
+{% endblock %}

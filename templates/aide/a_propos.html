@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+{% load parametres_filters %}
+
+{% block title %}À propos - {{ PARAMETRES_GLOBAUX.nom_application|default:"DEVDRECO SOFT" }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête de la page -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-0 text-dark">
+                        <i class="fas fa-info-circle me-2"></i>À propos de l'application
+                    </h1>
+                    <p class="text-muted mb-0">Informations sur DEVDRECO SOFT</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'aide:index' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Retour à l'aide
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Informations générales -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info me-2"></i>Informations générales
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Nom de l'application</h6>
+                            <p class="text-primary"><strong>DEVDRECO SOFT</strong></p>
+                            
+                            <h6>Version</h6>
+                            <p>1.0.0</p>
+                            
+                            <h6>Dernière mise à jour</h6>
+                            <p>Octobre 2025</p>
+                            
+                            <h6>Langue</h6>
+                            <p>Français</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Framework</h6>
+                            <p>Django 5.2.4</p>
+                            
+                            <h6>Base de données</h6>
+                            <p>SQLite (développement)</p>
+                            
+                            <h6>Interface</h6>
+                            <p>Bootstrap 5 + Font Awesome</p>
+                            
+                            <h6>Compatibilité</h6>
+                            <p>Navigateurs modernes (Chrome, Firefox, Safari, Edge)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fonctionnalités -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-star me-2"></i>Fonctionnalités principales
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Gestion commerciale</h6>
+                            <ul>
+                                <li>Base de données clients</li>
+                                <li>Création et suivi des devis</li>
+                                <li>Gestion des factures fournisseurs</li>
+                                <li>Bons de commande d'achat et de vente</li>
+                            </ul>
+                            
+                            <h6>Gestion des stocks</h6>
+                            <ul>
+                                <li>Catalogue d'articles</li>
+                                <li>Suivi des quantités</li>
+                                <li>Gestion des fournisseurs</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Rapports et analyses</h6>
+                            <ul>
+                                <li>Statistiques de vente</li>
+                                <li>Analyses d'achat</li>
+                                <li>Rapports financiers</li>
+                                <li>Évolutions temporelles</li>
+                            </ul>
+                            
+                            <h6>Sécurité et administration</h6>
+                            <ul>
+                                <li>Système de permissions</li>
+                                <li>Gestion des utilisateurs</li>
+                                <li>Paramétrage de l'application</li>
+                                <li>Sauvegardes automatiques</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Historique des versions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-history me-2"></i>Historique des versions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-primary"></div>
+                            <div class="timeline-content">
+                                <h6>Version 1.0.0 - Octobre 2025</h6>
+                                <p class="mb-0">Version initiale avec toutes les fonctionnalités de base</p>
+                                <small class="text-muted">Première release stable</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informations techniques -->
+        <div class="col-md-4">
+            <!-- Système -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-server me-2"></i>Système
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <div class="border rounded p-3">
+                                <i class="fas fa-database fa-2x text-primary mb-2"></i>
+                                <h6>Base de données</h6>
+                                <small class="text-muted">SQLite</small>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="border rounded p-3">
+                                <i class="fas fa-code fa-2x text-success mb-2"></i>
+                                <h6>Backend</h6>
+                                <small class="text-muted">Python/Django</small>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="border rounded p-3">
+                                <i class="fas fa-paint-brush fa-2x text-info mb-2"></i>
+                                <h6>Frontend</h6>
+                                <small class="text-muted">Bootstrap 5</small>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="border rounded p-3">
+                                <i class="fas fa-shield-alt fa-2x text-warning mb-2"></i>
+                                <h6>Sécurité</h6>
+                                <small class="text-muted">HTTPS/CSRF</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistiques -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>Statistiques
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-12 mb-3">
+                            <h4 class="text-primary">8</h4>
+                            <small class="text-muted">Modules principaux</small>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <h4 class="text-success">15+</h4>
+                            <small class="text-muted">Fonctionnalités</small>
+                        </div>
+                        <div class="col-12 mb-3">
+                            <h4 class="text-info">100%</h4>
+                            <small class="text-muted">Responsive</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Support -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-life-ring me-2"></i>Support
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">Besoin d'aide ?</p>
+                    <a href="{% url 'aide:contact' %}" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="fas fa-envelope me-2"></i>Nous contacter
+                    </a>
+                    <a href="{% url 'aide:faq' %}" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="fas fa-question-circle me-2"></i>Consulter la FAQ
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -37px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 3px #007bff;
+}
+
+.timeline-content {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 3px solid #007bff;
+}
+</style>
+{% endblock %}

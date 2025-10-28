@@ -1,0 +1,610 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Liste des Articles{% endblock %}
+
+{% block extra_css %}
+<style>
+    .article-card {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        background: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: box-shadow 0.3s ease;
+    }
+    
+    .article-card:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    
+    .article-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .article-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin: 0;
+    }
+    
+    .article-category {
+        background: #e9ecef;
+        color: #495057;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.875rem;
+    }
+    
+    .article-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: #6c757d;
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: #dee2e6;
+    }
+    
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e9ecef;
+    }
+    
+    .page-title {
+        font-size: 1.75rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin: 0;
+    }
+    
+    .stats-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+        color: #6c757d;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- En-tête de page -->
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fas fa-boxes"></i>
+            Gestion des Articles
+        </h1>
+        <div class="btn-group" role="group">
+            <a href="{% url 'articles:export_articles_excel' %}" class="btn btn-outline-success">
+                <i class="fas fa-download me-1"></i>Exporter
+            </a>
+            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#importModal">
+                <i class="fas fa-upload me-1"></i>Importer
+            </button>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#articleModal" onclick="openArticleModal()">
+                <i class="fas fa-plus me-1"></i>Nouvel Article
+            </button>
+            <a href="{% url 'articles:categorie_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-tags"></i>
+                Gérer les Catégories
+            </a>
+        </div>
+    </div>
+
+    <!-- Zone de recherche et filtres -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input type="text" class="form-control" id="searchInput" 
+                       placeholder="Rechercher un article ou catégorie..." 
+                       value="{{ search_query }}">
+                <button class="btn btn-outline-primary" type="button" id="searchButton">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <select class="form-select" id="statusFilter">
+                <option value="all" {% if status_filter == 'all' %}selected{% endif %}>Tous les statuts</option>
+                <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Actifs seulement</option>
+                <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactifs seulement</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" id="categoryFilter">
+                <option value="all" {% if category_filter == 'all' %}selected{% endif %}>Toutes les catégories</option>
+                {% for categorie in categories %}
+                <option value="{{ categorie.id }}" {% if category_filter == categorie.id|stringformat:"s" %}selected{% endif %}>
+                    {{ categorie.libelle }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" id="sortSelect">
+                <option value="designation" {% if sort_by == 'designation' %}selected{% endif %}>Trier par nom</option>
+                <option value="categorie__libelle" {% if sort_by == 'categorie__libelle' %}selected{% endif %}>Trier par catégorie</option>
+                <option value="date_creation" {% if sort_by == 'date_creation' %}selected{% endif %}>Trier par date de création</option>
+                <option value="date_modification" {% if sort_by == 'date_modification' %}selected{% endif %}>Trier par date de modification</option>
+                <option value="actif" {% if sort_by == 'actif' %}selected{% endif %}>Trier par statut</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Boutons de tri et actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="sortAscBtn" 
+                        title="Tri croissant">
+                    <i class="fas fa-sort-alpha-down"></i> Croissant
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="sortDescBtn" 
+                        title="Tri décroissant">
+                    <i class="fas fa-sort-alpha-up"></i> Décroissant
+                </button>
+                <button type="button" class="btn btn-outline-warning btn-sm" id="resetFiltersBtn" 
+                        title="Réinitialiser les filtres">
+                    <i class="fas fa-undo"></i> Réinitialiser
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="stats-cards">
+        <div class="stat-card">
+            <div class="stat-number">{{ articles|length }}</div>
+            <div class="stat-label">Total Articles</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ active_articles_count }}</div>
+            <div class="stat-label">Articles Actifs</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ categories|length }}</div>
+            <div class="stat-label">Catégories</div>
+        </div>
+    </div>
+
+    <!-- Liste des articles -->
+    <div class="row">
+        <div class="col-12">
+            {% if articles %}
+                <div class="row">
+                    {% for article in articles %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="article-card">
+                                <div class="article-header">
+                                    <h5 class="article-title">{{ article.designation }}</h5>
+                                    <span class="article-category">{{ article.categorie.libelle }}</span>
+                                </div>
+                                
+                                <div class="article-meta">
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar"></i>
+                                        Créé le {{ article.date_creation|date:"d/m/Y à H:i" }}
+                                    </small>
+                                </div>
+                                
+                                <div class="article-actions mt-3">
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="editArticle({{ article.id }})">
+                                        <i class="fas fa-edit"></i>
+                                        Modifier
+                                    </button>
+                                    <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteArticle({{ article.id }}, '{{ article.designation|escapejs }}')">
+                                        <i class="fas fa-trash"></i>
+                                        Supprimer
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-box-open"></i>
+                    <h3>Aucun article trouvé</h3>
+                    <p>Commencez par créer votre premier article.</p>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#articleModal" onclick="openArticleModal()">
+                        <i class="fas fa-plus"></i>
+                        Créer un Article
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour les articles -->
+<div class="modal fade" id="articleModal" tabindex="-1" aria-labelledby="articleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="articleModalLabel">Nouvel Article</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="articleModalBody">
+                <!-- Le contenu sera chargé dynamiquement -->
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Fonction pour ouvrir le modal d'article
+function openArticleModal() {
+    fetch('{% url "articles:article_create_popup" %}')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('articleModalBody').innerHTML = data.html;
+            document.getElementById('articleModalLabel').textContent = 'Nouvel Article';
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Erreur lors du chargement du formulaire');
+        });
+}
+
+
+// Fonction pour modifier un article
+function editArticle(articleId) {
+    fetch(`/articles/${articleId}/modifier/`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('articleModalBody').innerHTML = data.html;
+            document.getElementById('articleModalLabel').textContent = 'Modifier l\'Article';
+            const modal = new bootstrap.Modal(document.getElementById('articleModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            alert('Erreur lors du chargement de l\'article');
+        });
+}
+
+// Fonction pour supprimer un article
+function deleteArticle(articleId, designation) {
+    if (confirm(`Êtes-vous sûr de vouloir supprimer l'article "${designation}" ?`)) {
+        // Créer un FormData pour la requête POST
+        const formData = new FormData();
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        
+        fetch(`/articles/${articleId}/supprimer/`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Supprimer l'élément de la page sans recharger
+                const articleCard = document.querySelector(`[onclick*="deleteArticle(${articleId}"]`).closest('.col-md-6');
+                if (articleCard) {
+                    articleCard.remove();
+                }
+                
+                // Mettre à jour les statistiques
+                updateStats();
+                
+                // Afficher une notification de succès
+                showNotification('success', data.message);
+            } else {
+                showNotification('error', 'Erreur: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Erreur:', error);
+            showNotification('error', 'Erreur lors de la suppression');
+        });
+    }
+}
+
+// Fonction pour mettre à jour les statistiques
+function updateStats() {
+    const totalArticles = document.querySelectorAll('.article-card').length;
+    const activeArticles = document.querySelectorAll('.article-card').length; // Tous les articles affichés sont actifs après filtrage
+    
+    // Mettre à jour les statistiques
+    document.querySelector('.stat-card .stat-number').textContent = totalArticles;
+    document.querySelectorAll('.stat-card .stat-number')[1].textContent = activeArticles;
+}
+
+// Fonction pour afficher les notifications
+function showNotification(type, message) {
+    // Créer le conteneur de notifications s'il n'existe pas
+    let container = document.getElementById('notification-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'notification-container';
+        container.className = 'toast-container position-fixed top-0 end-0 p-3';
+        container.style.zIndex = '9999';
+        document.body.appendChild(container);
+    }
+    
+    const notificationId = 'notification-' + Date.now();
+    const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
+    const bgClass = type === 'success' ? 'bg-success' : 'bg-danger';
+    
+    const notificationHtml = `
+        <div id="${notificationId}" class="toast align-items-center text-white ${bgClass} border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas ${iconClass} me-2"></i>
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', notificationHtml);
+    
+    const notificationElement = document.getElementById(notificationId);
+    const toast = new bootstrap.Toast(notificationElement);
+    toast.show();
+    
+    // Supprimer l'élément après fermeture
+    notificationElement.addEventListener('hidden.bs.toast', () => {
+        notificationElement.remove();
+    });
+}
+
+// Gestion de la recherche et du tri
+document.addEventListener('DOMContentLoaded', function() {
+    // Variables pour la recherche et le tri
+    let searchTimeout;
+    const currentSort = '{{ sort_by }}';
+    const currentOrder = '{{ sort_order }}';
+    
+    // Fonction pour mettre à jour l'URL et recharger
+    function updateFilters() {
+        console.log('updateFilters appelée');
+        const searchQuery = document.getElementById('searchInput').value.trim();
+        const statusFilter = document.getElementById('statusFilter').value;
+        const categoryFilter = document.getElementById('categoryFilter').value;
+        const sortBy = document.getElementById('sortSelect').value;
+        
+        const params = new URLSearchParams();
+        if (searchQuery) params.set('search', searchQuery);
+        if (statusFilter !== 'all') params.set('status', statusFilter);
+        if (categoryFilter !== 'all') params.set('category', categoryFilter);
+        if (sortBy !== 'designation') params.set('sort', sortBy);
+        if (window.currentSortOrder !== 'asc') params.set('order', window.currentSortOrder);
+        
+        const url = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+        
+        // Recharger la page avec les nouveaux paramètres
+        window.location.href = url;
+    }
+    
+    // Recherche en temps réel
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(updateFilters, 500); // Délai de 500ms
+        });
+    }
+    
+    // Bouton de recherche manuel
+    const searchButton = document.getElementById('searchButton');
+    if (searchButton) {
+        searchButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Bouton de recherche cliqué');
+            clearTimeout(searchTimeout);
+            updateFilters();
+        });
+    }
+    
+    // Recherche avec la touche Entrée
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                clearTimeout(searchTimeout);
+                updateFilters();
+            }
+        });
+    }
+    
+    // Filtre par statut
+    const statusFilter = document.getElementById('statusFilter');
+    if (statusFilter) {
+        statusFilter.addEventListener('change', updateFilters);
+    }
+    
+    // Filtre par catégorie
+    const categoryFilter = document.getElementById('categoryFilter');
+    if (categoryFilter) {
+        categoryFilter.addEventListener('change', updateFilters);
+    }
+    
+    // Tri par critère
+    const sortSelect = document.getElementById('sortSelect');
+    if (sortSelect) {
+        sortSelect.addEventListener('change', updateFilters);
+    }
+    
+    // Boutons de tri
+    const sortAscBtn = document.getElementById('sortAscBtn');
+    if (sortAscBtn) {
+        sortAscBtn.addEventListener('click', function() {
+            window.currentSortOrder = 'asc';
+            updateFilters();
+        });
+    }
+    
+    const sortDescBtn = document.getElementById('sortDescBtn');
+    if (sortDescBtn) {
+        sortDescBtn.addEventListener('click', function() {
+            window.currentSortOrder = 'desc';
+            updateFilters();
+        });
+    }
+    
+    // Réinitialiser les filtres
+    const resetFiltersBtn = document.getElementById('resetFiltersBtn');
+    if (resetFiltersBtn) {
+        resetFiltersBtn.addEventListener('click', function() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('statusFilter').value = 'all';
+            document.getElementById('categoryFilter').value = 'all';
+            document.getElementById('sortSelect').value = 'designation';
+            window.currentSortOrder = 'asc';
+            updateFilters();
+        });
+    }
+    
+    // Initialiser l'ordre de tri
+    window.currentSortOrder = currentOrder;
+});
+
+// Gestion de la soumission du formulaire d'article
+document.addEventListener('DOMContentLoaded', function() {
+    const articleModal = document.getElementById('articleModal');
+    if (articleModal) {
+        articleModal.addEventListener('submit', function(e) {
+            if (e.target.tagName === 'FORM') {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                
+                fetch(e.target.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Fermer le modal
+                        const modal = bootstrap.Modal.getInstance(articleModal);
+                        modal.hide();
+                        
+                        // Afficher une notification de succès
+                        showNotification('success', data.message);
+                        
+                        // Recharger la page pour voir les changements
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        document.getElementById('articleModalBody').innerHTML = data.html;
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    showNotification('error', 'Erreur lors de la sauvegarde');
+                });
+            }
+        });
+    }
+});
+</script>
+
+<!-- Modal d'import -->
+<div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importModalLabel">
+                    <i class="fas fa-upload me-2"></i>Importer des articles
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Instructions :</strong>
+                    <ul class="mb-0 mt-2">
+                        <li>Téléchargez d'abord le modèle Excel</li>
+                        <li>Remplissez le fichier avec vos données</li>
+                        <li>Uploadez le fichier modifié</li>
+                        <li>Les catégories seront créées automatiquement si elles n'existent pas</li>
+                    </ul>
+                </div>
+                
+                <div class="d-grid gap-2 mb-3">
+                    <a href="{% url 'articles:download_template_articles' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-download me-2"></i>Télécharger le modèle Excel
+                    </a>
+                </div>
+                
+                <form method="post" action="{% url 'articles:import_articles_excel' %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="excel_file" class="form-label">Fichier Excel (.xlsx ou .xls)</label>
+                        <input type="file" class="form-control" id="excel_file" name="excel_file" 
+                               accept=".xlsx,.xls" required>
+                        <div class="form-text">
+                            Sélectionnez un fichier Excel contenant vos articles.
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-upload me-2"></i>Importer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
