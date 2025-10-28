@@ -49,8 +49,8 @@ DEVDRECO SOFT est une application web professionnelle développée en Django pou
 
 1. **Cloner le projet**
 ```bash
-git clone [URL_DU_REPO]
-cd DEVDRECO-SOFT
+git clone https://github.com/michevox/app.devdreco.git
+cd app.devdreco
 ```
 
 2. **Créer l'environnement virtuel**
@@ -234,4 +234,4 @@ Pour toute question ou support technique :
 
 ---
 
-**DEVDRECO SOFT** - Solution complète de gestion pour entreprises d'architecture et BTP 
+**DEVDRECO SOFT** - Solution complète de gestion pour entreprises d'architecture et BTP
